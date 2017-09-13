@@ -23,34 +23,34 @@
 var LBMath = LBMath || {};
 
 /**
- * @property {number} DEG_TO_RAD    Degrees to radians scale.
+ * @property {Number} DEG_TO_RAD    Degrees to radians scale.
  */
 LBMath.DEG_TO_RAD = Math.PI / 180;
 
 /**
- * @property {number} RAD_TO_DEG    Radians to degrees scale.
+ * @property {Number} RAD_TO_DEG    Radians to degrees scale.
  */
 LBMath.RAD_TO_DEG = 180 / Math.PI;
 
 /**
- * @property {number} TWO_PI    2 * PI
+ * @property {Number} TWO_PI    2 * PI
  */
 LBMath.TWO_PI = Math.PI * 2;
 
 /**
- * @property {number} PI_2    PI / 2
+ * @property {Number} PI_2    PI / 2
  */
 LBMath.PI_2 = Math.PI / 2;
 
 /**
- * @property {number} The default zero tolerance used by {@link LBMath.isLikeZero} and {@link LBMath.isNearEqual}.
+ * @property {Number} The default zero tolerance used by {@link LBMath.isLikeZero} and {@link LBMath.isNearEqual}.
  */
 LBMath.defZeroTolerance = 1e-10;
 
 /**
  * Determines if a number should be treated as zero (usually for avoiding divide by zero)
- * @param {number} x  The number.
- * @param {number} [tolerance=LBMath.defZeroTolerance]  The optional tolerance.
+ * @param {Number} x  The number.
+ * @param {Number} [tolerance=LBMath.defZeroTolerance]  The optional tolerance.
  * @returns {Boolean}   True if x can be considered zero.
  */
 LBMath.isLikeZero = function(x, tolerance) {
@@ -60,9 +60,9 @@ LBMath.isLikeZero = function(x, tolerance) {
 
 /**
  * Determines if two numbers are approximately equal.
- * @param {number} a    The first number.
- * @param {number} b    The second number.
- * @param {number} [tolerance=LBMath.defZeroTolerance]  The optional tolerance.
+ * @param {Number} a    The first number.
+ * @param {Number} b    The second number.
+ * @param {Number} [tolerance=LBMath.defZeroTolerance]  The optional tolerance.
  * @returns {Boolean}   True if the numbers can be considered equal.
  */
 LBMath.isNearEqual = function(a, b, tolerance) {
@@ -83,8 +83,8 @@ LBMath.isNearEqual = function(a, b, tolerance) {
 
 /**
  * Converts a value to zero if it is considered like zero by {@link LBMath.isLikeZero}.
- * @param {number} x    The value.
- * @param {number} [tolerance=LBMath.defZeroTolerance]  The optional tolerance.
+ * @param {Number} x    The value.
+ * @param {Number} [tolerance=LBMath.defZeroTolerance]  The optional tolerance.
  * @returns {Number}    x or 0.
  */
 LBMath.cleanNearZero = function(x, tolerance) {
@@ -93,10 +93,10 @@ LBMath.cleanNearZero = function(x, tolerance) {
 
 /**
  * Adjusts a value as necessary to ensure it is between two limits.
- * @param {number} val  The value to clamp if necessary.
- * @param {number} limitA  One of the limits.
- * @param {number} limitB The other limit.
- * @returns {number} The value clamped to the limits.
+ * @param {Number} val  The value to clamp if necessary.
+ * @param {Number} limitA  One of the limits.
+ * @param {Number} limitB The other limit.
+ * @returns {Number} The value clamped to the limits.
  */
 LBMath.clamp = function(val, limitA, limitB) {
     return (limitA < limitB) ? Math.min(Math.max(val, limitA), limitB) : Math.min(Math.max(val, limitB), limitA);
@@ -104,8 +104,8 @@ LBMath.clamp = function(val, limitA, limitB) {
 
 /**
  * Adjusts an angle in degrees so it satisfies -180 &lt; degrees &ge; 180.
- * @param {number} degrees  The anngle in degrees to wrap.
- * @returns {number}    degrees wrapped to -180 &lt; degrees &ge; 180.
+ * @param {Number} degrees  The anngle in degrees to wrap.
+ * @returns {Number}    degrees wrapped to -180 &lt; degrees &ge; 180.
  */
 LBMath.wrapDegrees = function(degrees) {
     degrees %= 360;
@@ -120,9 +120,21 @@ LBMath.wrapDegrees = function(degrees) {
 };
 
 /**
+ * Subtracts b from a in degrees, wrapping the result such that |b - a| &le; 180.
+ * @param {Number} a    The degrees to subtract from.
+ * @param {Number} b    The degress to subtract.
+ * @returns {Number}    The subtraction, wrapped.
+ */
+LBMath.subDegrees = function(a, b) {
+    a = LBMath.wrapDegrees(a);
+    b = LBMath.wrapDegrees(b);
+    return LBMath.wrapDegrees(a - b);
+};
+
+/**
  * Rounds a value to a certain number of decimal places.
- * @param {number} val  The value to be rounded.
- * @param {number} [decimalPlaces]  The number of decimal places, less than zero rounds
+ * @param {Number} val  The value to be rounded.
+ * @param {Number} [decimalPlaces]  The number of decimal places, less than zero rounds
  * above the decimal place.
  * @returns {Number}    The rounded value.
  */
@@ -136,8 +148,8 @@ LBMath.round = function(val, decimalPlaces) {
 
 /**
  * Rounds a value down to a certain number of decimal places.
- * @param {number} val  The value to be rounded downward.
- * @param {number} [decimalPlaces]  The number of decimal places, less than zero rounds
+ * @param {Number} val  The value to be rounded downward.
+ * @param {Number} [decimalPlaces]  The number of decimal places, less than zero rounds
  * above the decimal place.
  * @returns {Number}    The rounded value.
  */
@@ -153,9 +165,9 @@ LBMath.roundDown = function(val, decimalPlaces) {
 /**
  * Returns the angle in radians between sides a and b of a triangle, given the lengths
  * of the sides of the triangle.
- * @param {number} a    The length of one side of the vertex of interest.
- * @param {number} b    The length of the other side of the vertex of interest.
- * @param {number} c    The length of the side opposite the vertex of interest.
+ * @param {Number} a    The length of one side of the vertex of interest.
+ * @param {Number} b    The length of the other side of the vertex of interest.
+ * @param {Number} c    The length of the side opposite the vertex of interest.
  * @returns {Number}    The angle between sides a and b in radians.
  */
 LBMath.radFromThreeSides = function(a, b, c) {
@@ -254,6 +266,17 @@ LBMath.CSpline = function(xs, ys) {
 };
 
 LBMath.CSpline.prototype = {
+    /**
+     * Call when done with the object to have it release any internal references
+     * to other objects to help with garbage collection.
+     * @returns {undefined}
+     */
+    destroy: function() {
+        this.xs = null;
+        this.y2s = null;
+        this.ys = null;
+    },
+
     constructor: LBMath.CSpline,
     
     /**
@@ -297,7 +320,7 @@ LBMath.CSpline.prototype = {
      * -1 if x &lt; this.xs[0].
      */
     findLowIndex: function(x) {
-        return Leeboard.bsearch(this.xs, x);
+        return LBUtil.bsearch(this.xs, x);
     },
 
     /**
@@ -326,3 +349,91 @@ LBMath.CSpline.prototype = {
         return y;
     }
 };
+
+
+/**
+ * First order backward finite difference with two terms. Equations from:
+ * https://en.wikipedia.org/wiki/Finite_difference_coefficient
+ * @param {Number} dt   The time step.
+ * @param {Number} f0   The latest value.
+ * @param {Number} fm1  The value at time -dt
+ * @returns {Number}    The finite difference.
+ */
+LBMath.finiteDiffBackFirst_2 = function(dt, f0, fm1) {
+    return (f0 - fm1) / dt;
+};
+
+/**
+ * First order backward finite difference with three terms. Equations from:
+ * https://en.wikipedia.org/wiki/Finite_difference_coefficient
+ * @param {Number} dt   The time step.
+ * @param {Number} f0   The latest value.
+ * @param {Number} fm1  The value at time -dt
+ * @param {Number} fm2  The value at time -2*dt
+ * @returns {Number}    The finite difference.
+ */
+LBMath.finiteDiffBackFirst_3 = function(dt, f0, fm1, fm2) {
+    return (1.5*f0 - 2*fm1 + 0.5*fm2) / dt;
+};
+
+/**
+ * First order backward finite difference with four terms. Equations from:
+ * https://en.wikipedia.org/wiki/Finite_difference_coefficient
+ * @param {Number} dt   The time step.
+ * @param {Number} f0   The latest value.
+ * @param {Number} fm1  The value at time -dt
+ * @param {Number} fm2  The value at time -2*dt
+ * @param {Number} fm3  The value at time -3*dt
+ * @returns {Number}    The finite difference.
+ */
+LBMath.finiteDiffBackFirst_4 = function(dt, f0, fm1, fm2, fm3) {
+    return (11/6*f0 - 3*fm1 + 1.5*fm2 - fm3/3) / dt;
+};
+
+/**
+ * First order backward finite difference with five terms. Equations from:
+ * https://en.wikipedia.org/wiki/Finite_difference_coefficient
+ * @param {Number} dt   The time step.
+ * @param {Number} f0   The latest value.
+ * @param {Number} fm1  The value at time -dt
+ * @param {Number} fm2  The value at time -2*dt
+ * @param {Number} fm3  The value at time -3*dt
+ * @param {Number} fm4  The value at time -4*dt
+ * @returns {Number}    The finite difference.
+ */
+LBMath.finiteDiffBackFirst_5 = function(dt, f0, fm1, fm2, fm3, fm4) {
+    return (25/12*f0 - 4*fm1 + 3*fm2 -4*fm3/3 + 0.25*fm4) / dt;
+};
+
+/**
+ * First order backward finite difference that adapts to the number of values
+ * passed in.
+ * @param {Number|Number[]} dt   The time step if a single value, if an array then the array
+ * contains the arguments described below, including the dt.
+ * @param {Number} [f0]   The latest value.
+ * @param {Number} [fm1]  The value at time -dt
+ * @param {Number} [fm2]  The value at time -2*dt
+ * @param {Number} [fm3]  The value at time -3*dt
+ * @param {Number} [fm4]  The value at time -4*dt
+ * @returns {Number}    The finite difference.
+ */
+LBMath.finiteDiffBackFirst = function(dt, f0, fm1, fm2, fm3, fm4) {
+    var args = (Array.isArray(dt)) ? dt : arguments;
+    if (args.length === 3) {
+        return LBMath.finiteDiffBackFirst_2(args[0], args[1], args[2]);
+    }
+    if (args.length === 4) {
+        return LBMath.finiteDiffBackFirst_3(args[0], args[1], args[2], args[3]);
+    }
+    if (args.length === 5) {
+        return LBMath.finiteDiffBackFirst_4(args[0], args[1], args[2], args[3], args[4]);
+    }
+    
+    return LBMath.finiteDiffBackFirst_5(args[0], args[1], args[2], args[3], args[4], args[5]);
+};
+
+/**
+ * The maximum number of terms supported by {@link LBMath.finiteDiffBackFirst}.
+ * @type Number
+ */
+LBMath.finiteDiffBackFirst.MAX_TERMS = 5;

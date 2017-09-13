@@ -65,12 +65,12 @@ LBSailSim.Delft.calcResiduaryResistance = function(hull) {
     }
     
     var coefs = LBSailSim.Delft._workingResiduaryResistanceCoefs;
-    coefs.splice(0, coefs.length);
+    coefs.length = 0;
     for (var i = 0; i < LBSailSim.Delft.residuaryResitanceInterps.length; ++i) {
         coefs.push(LBSailSim.Delft.residuaryResitanceInterps[i].interpolate(fn));
     }
     
-    var result = LBSailSim.Delft.evalResiduaryResistance(hull, fn, coefs);    
+    var result = LBSailSim.Delft.evalResiduaryResistance(hull, fn, coefs);
     return result * hull.delC * env.water.density * env.gravity;
 };
 
@@ -78,9 +78,9 @@ LBSailSim.Delft.calcResiduaryResistance = function(hull) {
  * Evaluates the Delft residuary resistance equation for a given set of coefficients,
  * Larsson p.g 78.
  * @param {LBSailSim.Hull} hull The hull parameters.
- * @param {number} fn   The Froude number.
+ * @param {Number} fn   The Froude number.
  * @param {Array} coefs The array of coefficients.
- * @returns {number}    Rrc / (delC * rho * g)
+ * @returns {Number}    Rrc / (delC * rho * g)
  */
 LBSailSim.Delft.evalResiduaryResistance = function(hull, fn, coefs) {
     var val = coefs[0];
@@ -93,7 +93,7 @@ LBSailSim.Delft.evalResiduaryResistance = function(hull, fn, coefs) {
     val += (coefs[5] * delC_2_3 / hull.swc + coefs[6] * hull.lcb / hull.lcf + coefs[7] * lcb_lwl * lcb_lwl + coefs[8] * hull.cp * hull.cp)
         * delC_1_3_lwl;
     
-    return val;
+    return (val > 0) ? val : 0;
 };
 
 
@@ -119,11 +119,11 @@ LBSailSim.Delft._workingWettedSurfaceHeelCoefs = [];
  * Calculates the Delft wetted surface area correction for heel (multiply the result by the unheeled
  * wetted surface area). From Larsson pg. 86, Fossati pg. 28.
  * @param {LBSailSim.Hull} hull The hull parameters.
- * @returns {number}    The correction to multiply the unheeled wetted surface area by.
+ * @returns {Number}    The correction to multiply the unheeled wetted surface area by.
  */
 LBSailSim.Delft.calcWettedSurfaceHeelCorrection = function(hull) {
     var coefs = LBSailSim.Delft._workingWettedSurfaceHeelCoefs;
-    coefs.splice(0, coefs.length);
+    coefs.length = 0;
 
     var deg = Math.abs(hull.heelAngleDeg);
     for (var i = 0; i < LBSailSim.Delft.wettedSurfaceHeelInterps.length; ++i) {
@@ -137,7 +137,7 @@ LBSailSim.Delft.calcWettedSurfaceHeelCorrection = function(hull) {
  * Evaluates the Delft wetted surface area correction equation for a given set of coefficients.
  * @param {LBSailSim.Hull} hull The hull parameters.
  * @param {Array} coefs THe coefficients to use.
- * @returns {number}    The correction.
+ * @returns {Number}    The correction.
  */
 LBSailSim.Delft.evalWettedSurfaceHeelCorrection = function(hull, coefs) {
     var bwl_tc = hull.bwl / hull.tc;

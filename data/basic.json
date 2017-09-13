@@ -2,8 +2,11 @@
     "myBoat": { "type": "dinghy" },
     
     "buoys": [
-        { "image": "can", "x": 100, "y": 200 },
-        { "image": "can", "x": 100, "y":400 }
+        { "image": "can", "x": 10, "y": 0 },
+        { "image": "can", "x": 10, "y": -20 },
+        { "image": "can", "x": 10, "y": -40 },
+        { "image": "can", "x": 25, "y": -20 },
+        { "image": "can", "x": 40, "y": -20 }
     ]
     
 }

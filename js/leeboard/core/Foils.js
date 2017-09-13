@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* global Leeboard, LBGeometry, LBPhysics, LBMath */
+/* global LBUtil, LBGeometry, LBPhysics, LBMath */
 
 /**
  * @namespace LBFoils
@@ -24,28 +24,28 @@ var LBFoils = LBFoils || {};
 /**
  * Object holding lift, drag, and moment coefficients.
  * @constructor
- * @param {number} cl The lift coefficient.
- * @param {number} cd The drag coefficient.
- * @param {number} cm The moment coefficient.
+ * @param {Number} cl The lift coefficient.
+ * @param {Number} cd The drag coefficient.
+ * @param {Number} cm The moment coefficient.
  * @returns {LBFoils.ClCd} 
  */
 LBFoils.ClCd = function(cl, cd, cm) {
     /**
      * The lift coefficient, Cl
-     * @member {number}
+     * @member {Number}
      */
     this.cl = cl || 0;
         
     /**
      * The drag coefficient, Cd
-     * @member {number}
+     * @member {Number}
      */
     this.cd = cd || 0;
 
     
     /**
      * The moment coefficient, Cm
-     * @member {number}
+     * @member {Number}
      */
     this.cm = cm || 0;
     
@@ -56,29 +56,55 @@ LBFoils.ClCd = function(cl, cd, cm) {
     this.cmIsChordFraction = false;
 };
 
+LBFoils.ClCd._workingVector3A;
+LBFoils.ClCd._workingVector3B;
+LBFoils.ClCd._workingLine3A;
 /**
  * Calculates the lift and drag forces and the moment from the coefficients.
  * @param {object} coefs    The lift/drag coefficients.
- * @param {number} rho    The density.
- * @param {number} area   The area.
- * @param {number} qInfSpeed   The magnitude of the free stream velocity.
- * @param {number} chordLength The chord length, used for calculating the moment.
- * @param {number} aspectRatio  Optional aspect ratio, used for calculating the induced drag.
+ * @param {Number} rho    The density.
+ * @param {Number} area   The area.
+ * @param {Number} qInfSpeed   The magnitude of the free stream velocity.
+ * @param {object} qInfLocal    The free stream velocity in the local x-y plane, used to determine
+ * the angle of the chord to the lift/drag vector.
+ * @param {Number} chordLength The chord length, used for calculating the moment.
+ * @param {Number} aspectRatio  Optional aspect ratio, used for calculating the induced drag.
  * @param {object} store  Optional object to store the lift, drag, and moment into.
  * @returns {object}    The object containing the calculated lift, drag, and moment.
  */
-LBFoils.ClCd.calcLiftDragMoment = function(coefs, rho, area, qInfSpeed, chordLength, aspectRatio, store) {
+LBFoils.ClCd.calcLiftDragMoment = function(coefs, rho, area, qInfSpeed, qInfLocal, chordLength, aspectRatio, store) {
     var scale = 0.5 * rho * area * qInfSpeed * qInfSpeed;
     store = store || {};
     store.lift = coefs.cl * scale;
     store.drag = coefs.cd * scale;
     chordLength = chordLength || 1;
 
-    var cm = coefs.cm;
-    if (coefs.cmIsChordFraction) {
-        cm *= Math.sqrt(coefs.cl * coefs.cl + coefs.cd * coefs.cd);
+    if (LBMath.isLikeZero(qInfSpeed)) {
+        store.moment = 0;
     }
-    store.moment = cm * scale * chordLength;
+    else if (coefs.cmIsChordFraction) {
+        var force = LBFoils.ClCd._workingVector3A = LBFoils.ClCd._workingVector3A || new LBGeometry.Vector3();
+        var cosAlpha = qInfLocal.x / qInfSpeed;
+        var sinAlpha = qInfLocal.y / qInfSpeed;
+        force.set(store.drag * cosAlpha - store.lift * sinAlpha, store.drag * sinAlpha + store.lift * cosAlpha, 0);
+
+        var line = LBFoils.ClCd._workingLine3A = LBFoils.ClCd._workingLine3A || new LBGeometry.Line3();
+        
+        // We use |coefs.cm| because the sign is handled by the lift/drag and qInfLocal direction.
+        line.start.set(Math.abs(coefs.cm) * chordLength, 0, 0);
+        line.end.copy(line.start);
+        line.end.add(force);
+
+        var applPoint = LBFoils.ClCd._workingVector3B = LBFoils.ClCd._workingVector3B || new LBGeometry.Vector3();
+        line.closestPointToPoint(LBGeometry.ORIGIN, false, applPoint);        
+        applPoint.z = 0;
+        
+        LBPhysics.calcMoment(force, applPoint, applPoint);
+        store.moment = applPoint.z;
+    }
+    else {
+        store.moment = coefs.cm * scale * chordLength;
+    }
 
     if (aspectRatio) {
         var ci = coefs.cl * coefs.cl / (Math.PI * aspectRatio);
@@ -108,10 +134,10 @@ LBFoils.ClCd.prototype = {
 /**
  * Calculates the moment coefficient for a given angle of attack, coefficients of lift,
  * drag, and force application point relative to the leading edge.
- * @param {number} degrees  The angle of attack in degrees.
- * @param {number} cl   The coefficient of lift at the angle of attack.
- * @param {number} cd   The coefficient of drag at the angle of attack.
- * @param {number} chordFraction    The point where the force is applied along the chord
+ * @param {Number} degrees  The angle of attack in degrees.
+ * @param {Number} cl   The coefficient of lift at the angle of attack.
+ * @param {Number} cd   The coefficient of drag at the angle of attack.
+ * @param {Number} chordFraction    The point where the force is applied along the chord
  * as a fraction of the chord from the leading edge.
  * @returns {Number}    The moment coefficient.
  */
@@ -143,27 +169,27 @@ LBFoils.calcCmForClCd = function(degrees, cl, cd, chordFraction) {
  * Object that computes an approximation of the lift/drag/moment coefficients
  * of a flat plate when stalled.
  * @constructor
- * @param {number}  cl45Deg The Cl value at 45 degrees angle of attack.
- * @param {number}  cd45Deg The Cd value at 45 degrees angle of attack.
- * @param {number}  cd90Deg The Cd value at 90 degrees angle of attachk.
+ * @param {Number}  cl45Deg The Cl value at 45 degrees angle of attack.
+ * @param {Number}  cd45Deg The Cd value at 45 degrees angle of attack.
+ * @param {Number}  cd90Deg The Cd value at 90 degrees angle of attachk.
  * @returns {LBFoils.ClCdStall}
  */
 LBFoils.ClCdStall = function(cl45Deg, cd45Deg, cd90Deg) {
     /**
      * The coefficient of lift at 45 degrees angle of attack.
-     * @member {number}
+     * @member {Number}
      */
     this.cl45Deg = cl45Deg || 1.08;
     
     /**
      * The coefficient of drag at 45 degrees angle of attack.
-     * @member {number}
+     * @member {Number}
      */
     this.cd45Deg = cd45Deg || 1.11;
     
     /**
      * The coefficient of drag at 90 degrees angle of attack (the lift is 0 at 90 degrees).
-     * @member {number}
+     * @member {Number}
      */
     this.cd90Deg = cd90Deg || 1.80;
 };
@@ -185,7 +211,7 @@ LBFoils.ClCdStall.prototype = {
     
     /**
      * Calculates the coefficients of lift, drag and moment for a given angle of attack in degrees.
-     * @param {number} deg    The angle of attack in degrees.
+     * @param {Number} deg    The angle of attack in degrees.
      * @param {object} store  If not undefined, the object to store the coefficients in.
      * @returns {object}  The object with the lift, drag, and moment coefficients (cl, cd, cm).
      */
@@ -234,7 +260,7 @@ LBFoils.ClCdStall.createFromData = function(data) {
     
     var clCdStall;
     if (data.className) {
-        clCdStall = Leeboard.newClassInstanceFromData(data);
+        clCdStall = LBUtil.newClassInstanceFromData(data);
     }
     else {
         clCdStall = new LBFoils.ClCdStall();
@@ -283,9 +309,9 @@ LBFoils.ClCdInterp.prototype = {
                 alphas.push(180 - this.alphas[i]);
             }
             this.alphas = alphas;
-            this.cls = Leeboard.copyAndMirrorArray(this.cls);
-            this.cds = Leeboard.copyAndMirrorArray(this.cds);
-            this.cms = Leeboard.copyAndMirrorArray(this.cms);
+            this.cls = LBUtil.copyAndMirrorArray(this.cls);
+            this.cds = LBUtil.copyAndMirrorArray(this.cds);
+            this.cms = LBUtil.copyAndMirrorArray(this.cms);
         }
         
         this.interpCls.setup(this.alphas, this.cls);
@@ -303,7 +329,7 @@ LBFoils.ClCdInterp.prototype = {
     
     /**
      * Calculates the coefficients of lift, drag and moment for a given angle of attack in degrees.
-     * @param {number} deg    The angle of attack in degrees.
+     * @param {Number} deg    The angle of attack in degrees.
      * @param {object} store  If not undefined, the object to store the coefficients in.
      * @returns {object}  The object with the lift, drag, and moment coefficients (cl, cd, cm).
      */
@@ -395,7 +421,7 @@ LBFoils.ClCdCurve.prototype = {
     
     /**
      * Calculates the coefficients of lift, drag and moment for a given angle of attack in degrees.
-     * @param {number} degrees    The angle of attack in degrees.
+     * @param {Number} degrees    The angle of attack in degrees.
      * @param {object} store  If not undefined, the object to store the coefficients in.
      * @returns {object}  The object with the lift, drag, and moment coefficients (cl, cd, cm).
      */
@@ -420,7 +446,7 @@ LBFoils.ClCdCurve.prototype = {
         
         // TODO: To support a non-symmetric clCdStall, we need to add liftStartDeg and stallEndDeg.
         // Also need to support reverse direction stall angles.
-        if (this.clCdStall === null) {
+        if (!this.clCdStall) {
             store = this.clCdLifting.calcCoefsDeg(degrees, store);
             store.stallFraction = 0;
         }
@@ -485,19 +511,8 @@ LBFoils.ClCdCurve.prototype = {
         
         store.clean();
         return store;
-    },
-
-    test: function(start, end, delta) {
-        console.log("Test ClCdCurve:");
-        var clCd;
-        for (var i = start; i < end; i += delta) {
-            clCd = this.calcCoefsDeg(i, clCd);
-            console.log(i + "\t" + clCd.cl + "\t" + clCd.cd + "\t" + clCd.cm + "\t" + clCd.stallFraction + "\t"
-                    + "\t" + clCd.clLift + "\t" + clCd.cdLift + "\t" + clCd.cmLift + "\t"
-                    + "\t" + clCd.clStalled + "\t" + clCd.cdStalled + "\t" + clCd.cmStalled + "\t");
-        }
     }
-    
+
 };
 
 
@@ -522,19 +537,19 @@ LBFoils.Foil = function() {
     
     /**
      * The z coordinate of the 2D slice.
-     * @member {number}
+     * @member {Number}
      */
     this.sliceZ = 0;
     
     /**
      * The area to use in computing the forces from the coefficients.
-     * @member {number}
+     * @member {Number}
      */
     this.area = 1;
     
     /**
      * The aspect ratio of the foil, this may be null.
-     * @member {number}
+     * @member {Number}
      */
     this.aspectRatio = null;
     
@@ -543,6 +558,14 @@ LBFoils.Foil = function() {
      * @member {LBFoils.ClCdCurve}
      */
     this.clCdCurve = new LBFoils.ClCdCurve();
+    
+    /**
+     * This is used by {@link LBFoils.Foil#calcWorldForce} to control the weighting
+     * of the velocities of the start and end points of the chord when determining
+     * the overall velocity of the foil.
+     * @member {Number}
+     */
+    this.startVelocityWeight = 0.75;
     
     LBFoils.Foil._workingVel = LBFoils.Foil._workingVel || new LBGeometry.Vector3();
     LBFoils.Foil._workingVelResults = LBFoils.Foil._workingVelResults || {
@@ -555,7 +578,6 @@ LBFoils.Foil._workingVel;
 LBFoils.Foil._workingVelResults;
 
 LBFoils.Foil.prototype = {
-    constructor: LBFoils.Foil,
         
     /**
      * The main loading method.
@@ -565,10 +587,11 @@ LBFoils.Foil.prototype = {
      * @return {object} this.
      */
     load: function(data, curveLib) {
-        this.chordLine = Leeboard.copyCommonProperties(this.chordLine, data.chordLine);
+        this.chordLine = LBUtil.copyCommonProperties(this.chordLine, data.chordLine);
         this.sliceZ = data.sliceZ || this.sliceZ;
         this.area = data.area || this.area;
         this.aspectRatio = data.aspectRatio || this.aspectRatio;
+        this.startVelocityWeight = data.startVelocityWeight || this.startVelocityWeight;
         
         this.clCdCurve = undefined;
         if (data.libClCdCurve) {
@@ -585,7 +608,7 @@ LBFoils.Foil.prototype = {
     /**
      * Calculates the lift and drag forces, and the moment, all in local coordinates.
      * The moment is about the leading edge, or this.chordLine.start.
-     * @param {number} rho  The fluid density.
+     * @param {Number} rho  The fluid density.
      * @param {object} qInfLocal    The free stream velocity in the local x-y plane.
      * @param {object} [details]  If defined, an object to receive details about the calculation.
      * @param {object} [store]  If defined, the object to receive the forces and moment.
@@ -611,15 +634,15 @@ LBFoils.Foil.prototype = {
         
         if (details) {
             details.angleDeg = angleDeg;
-            details.qInfLocal = qInfLocal.clone();
+            details.qInfLocal = LBGeometry.copyOrCloneVector3(details.qInfLocal, qInfLocal);
         }
-        return LBFoils.ClCd.calcLiftDragMoment(coefs, rho, this.area, qInfSpeed, chordLength, this.aspectRatio, store);
+        return LBFoils.ClCd.calcLiftDragMoment(coefs, rho, this.area, qInfSpeed, qInfLocal, chordLength, this.aspectRatio, store);
     },
     
     /**
      * Calculates the forces and moment in the local x-y plane coordinates.
      * The moment is about the leading edge, or this.chordLine.start.
-     * @param {number} rho  The fluid density.
+     * @param {Number} rho  The fluid density.
      * @param {object} qInfLocal    The free stream velocity in the local x-y plane.
      * @param {object} [details]   If defined, an object that will receive details such
      * as lift, drag, induced drag, moment.
@@ -658,7 +681,7 @@ LBFoils.Foil.prototype = {
      * Calculates the force and moment in world coordinates. Note that because we treat
      * the foil as a 2D slice, we end up projecting the apparent wind onto the local
      * x-y plane. Cross wind effects are ignored for now.
-     * @param {number} rho    The fluid density.
+     * @param {Number} rho    The fluid density.
      * @param {object} qInfWorld  The free stream velocity in world coordinates.
      * @param {LBPhysics.CoordSystemState} coordSystemState   The coordinate system state, this defines the
      *  world-local transformations as well as the change in world position/orientation.
@@ -673,40 +696,62 @@ LBFoils.Foil.prototype = {
 
         coordSystemState.calcVectorLocalToWorld(this.chordLine.start, velResults);
         appVel.copy(velResults.worldVel);
+        var startSpeed = appVel.lengthSq();
         
         coordSystemState.calcVectorLocalToWorld(this.chordLine.end, velResults);
-        appVel.add(velResults.worldVel).multiplyScalar(0.5);
+        var endSpeed = velResults.worldVel.lengthSq();
+        
+        var totalSpeed = startSpeed + endSpeed;
+        if (totalSpeed > 0) {
+            var startWeight;
+            if (startSpeed < endSpeed) {
+                startWeight = this.startVelocityWeight;
+            }
+            else {
+                startWeight = 1 - this.startVelocityWeight;
+            }
+            var endWeight = 1 - startWeight;
+            
+            appVel.multiplyScalar(startWeight);
+            velResults.worldVel.multiplyScalar(endWeight);
+            appVel.add(velResults.worldVel);
+        }
+        
+        if (details) {
+            details.worldVel = LBGeometry.copyOrCloneVector3(details.worldVel, velResults.worldVel);
+        }
         
         appVel.negate();
         appVel.add(qInfWorld);
         
-        appVel.applyMatrix4Rotation(coordSystemState.localXfrm);
+        appVel.applyMatrix4Rotation(coordSystemState.localXfrm);        
+        appVel.z = 0;
         
         resultant = this.calcLocalForce(rho, appVel, details, resultant);
+        
+        if (details && details.localResultant) {
+            details.localResultant.copy(resultant);
+        }
+        
         resultant.applyMatrix4(coordSystemState.worldXfrm);
         
         return resultant;
     },
     
-    
-    localForceTest: function(rho, qInfSpeed, start, end, delta) {
-        console.log("LBFoils.Foil.localForceTest:");
-        console.log("Deg\t\tApplPoint.x\tApplPoint.y\t\tForce.x\tForce.y\t\tMoment.z");
-        var resultant = new LBPhysics.Resultant3D();
-        var details = {};
-        var qInfLocal = new LBGeometry.Vector2();
-        for (var deg = start; deg < end; deg += delta) {
-            var rad = deg * LBMath.DEG_TO_RAD;
-            qInfLocal.set(Math.cos(rad) * qInfSpeed, Math.sin(rad) * qInfSpeed);
-            this.calcLocalForce(rho, qInfLocal, details, resultant);
-            var string = deg + "\t" 
-                    //+ "\t" + resultant.applPoint.x + "\t" + resultant.applPoint.y + "\t" 
-                    + "\t" + resultant.force.x + "\t" + resultant.force.y + "\t"
-                    + "\t" + resultant.moment.z
-                    + "\t" + details.coefs.stallFraction;
-            console.log(string);
+    /**
+     * Call when done with the object to have it release any internal references
+     * to other objects to help with garbage collection.
+     * @returns {undefined}
+     */
+    destroy: function() {
+        if (this.chordLine) {
+            this.chordLine = null;
+            this.clCdCurve = null;
+            
         }
-    }
+    },
+    
+    constructor: LBFoils.Foil
 };
 
 
@@ -733,7 +778,7 @@ LBFoils.Foil.createFromData = function(data, curveLib, defCreatorFunc) {
     
     var foil;
     if (data.className) {
-        foil = Leeboard.newClassInstanceFromData(data);
+        foil = LBUtil.newClassInstanceFromData(data);
     }
     else if (defCreatorFunc) {
         foil = defCreatorFunc(data);

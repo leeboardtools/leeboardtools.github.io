@@ -3,7 +3,7 @@
         {
             "typeName": "Tubby",
             "instances": [ "TubbyA", "TubbyB", "TubbyC" ],
-            "p2Body": {
+            "phaser": {
                 "sprite": {
                     "key": "tubby",
                     "anchor": {
@@ -12,62 +12,191 @@
                     }
                 }
             },
+            "debugForces": true,
             "mass": 378,
-            "centerOfMass": { "x": 0, "y": 0, "z": 0 },
-            "massRadius": 4,
-            "momentInertia": { "xx": 1, "yy": 1, "zz": 100 },
+            "massRadius": 4,    "_comment": "Used for the force arrows",
+            "linearDamping": 0.1,
+            "angularDamping": 0.05,
+            "velocityTerms": 3,
+            "volumes": {
+                "mirrorPlane": {
+                    "normal": { "x": 0, "y": 1, "z": 0},
+                    "constant": 0
+                },
+                "vertices": [
+                    0,0,0,
+                    1.95472, 0, -0.11328,
+                    3.65447, 0, -0.08901,
+                    5.41000, 0, 0,
+
+                    5.46590, 0, 0.51396,
+                    3.68589, 0, 0.49091,
+                    1.88995, 0, 0.51396,
+                    -0.4000, 0, 0.59696,
+
+                    0.30440, 0.45819, 0,
+                    1.95846, 0.85658, 0,
+                    3.67626, 0.85658, 0,
+                    5.4100, 0.70519, 0,
+
+                    5.46590, 0.78487, 0.51396,
+                    3.69463, 1.00000, 0.49091,
+                    1.92336, 1.00000, 0.51396,
+                    0.15210, 0.63348, 0.56468
+                ],
+                "indices": [
+                    [ 0, 1, 6, 7, 8, 9, 14, 15 ],
+                    [ 1, 2, 5, 6, 9, 10, 13, 14 ],
+                    [ 2, 3, 4, 5, 10, 11, 12, 13 ]
+                ],
+                "xyOutlineIndices": [
+                    0, 8, 9, 10, 11
+                ],
+                "panels": [
+                    {
+                        "frameColor": "0x000000",
+                        "closeFrame": true,
+                        "fillColor": "0xFFFFFF",
+                        "volFaces": [0,4, 0,5, 1,4, 1,5, 2,4, 2,5, 3,4, 3,5, 4,4, 4,5, 5,4, 5,5]
+                    },
+                    {
+                        "frameColor": "0x000000",
+                        "closeFrame": true,
+                        "fillColor": "0x008888",
+                        "volFaces": [0,6, 0,7, 0,10, 0,11, 1,10, 1,11, 2,10, 2,11, 2,2, 2,3, 3,6, 3,7, 3,10, 3,11, 4,10, 4,11, 5,10, 5,11, 5,2, 5,3 ]
+                    },
+                    {
+                        "frameColor": "0x000000",
+                        "closeFrame": true,
+                        "fillColor": "0x000088",
+                        "volFaces": [0,8, 0,9, 1,8, 1,9, 2,8, 2,9, 3,8, 3,9, 4,8, 4,9, 5,8, 5,9 ]
+                    }
+                ]
+            },
             "hull": {
                 "lwl": 5.41,
                 "bwl": 2.13,
                 "tc": 0.15,
-                "delC": 7.63,
                 "k": 200e-6,
-                "centerOfBuoyancy": { "x": 2.2 }
+                "debugForces": true
             },
+            "spars": [
+                {
+                    "name": "mainmast",
+                    "mass": 19.09,
+                    "obj3D": {
+                        "position" : { "x": 1.6, "y": 0, "z": 0.51 }
+                    },
+                    "volume": {
+                        "type": "cylinder",
+                        "base": { "x": 0, "y": 0, "z": 0 },
+                        "size": { "x": 0.101, "y": 0.076, "z": 8 },
+                        "panels": [
+                            {
+                                "fillColor": "0x808080",
+                                "volFaces": [0,-1]
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "mainboom",
+                    "mass": 4.55,
+                    "obj3D": {
+                        "position": { "x": 1.6, "y": 0, "z": 1.0 }
+                    },
+                    "volume": {
+                        "type": "cylinder",
+                        "base": { "x": 0, "y": 0, "z": 0 },
+                        "size": { "x": 0.076, "y": 0.05, "z": 3.15 },
+                        "rotation": { "exd": 0, "eyd": 90, "ezd": 0 },
+                        "panels": [
+                            {
+                                "_frameColor": 0,
+                                "fillColor": "0x808080",
+                                "volFaces": [0,-1]
+                            }
+                        ]
+                    }
+                }
+            ],
             "airfoils": [
                 {
                     "name": "mainsail",
+                    "dumpFoilDetails": true,
                     "mass": 4.55,
-                    "centerOfMass": { "x": 0.8, "y": 0, "z": 4 },
                     "massRadius": 4,
+                    "velocityTerms": 3,
                     "obj3D": {
-                        "position" : { "x": 1.6, "y": 0, "z": 0 },
+                        "position" : { "x": 1.7, "y": 0, "z": 1.0 },
                         "rotation": { "exd": 0, "eyd": 0, "ezd": 0 }
                         },
-                    "phaser_sprite": {
+                    "_phaser_sprite": {
                         "key": "tubby_mainsail",
-                        "lbLocalOffset": {
-                            "x": 0,
-                            "y": 0
-                        },
                         "anchor": {
                             "x": 0,
                             "y": 1
                         }
-                        },
+                    },
+                    "sparName": "mainboom",
+                    "sailShaper": {
+                        "className": "LBSailSim.TriangleSailShaper",
+                        "luffLength": 7.48,
+                        "footLength": 3.15,
+                        "headLength": 0.00,
+                        "slices": [
+                            {
+                                "slicePosFraction": 0.25,
+                                "surfaceLength": 3.00,
+                                "pointCount": 5
+                            },
+                            {
+                                "slicePosFraction": 0.54,
+                                "surfaceLength": 2.48,
+                                "pointCount": 5
+                            },
+                            {
+                                "slicePosFraction": 0.81,
+                                "surfaceLength": 1.47,
+                                "pointCount": 5
+                            }
+                        ],
+                        "panels": [
+                            {
+                                "frameColor": "0x080808",
+                                "fillColor": "0xFFFFFF",
+                                "closeFrame": true,
+                                "doubleSided": true,
+                                "startSlice": 0,
+                                "endSlice": -1
+                            }
+                        ]
+                    },
+                                        
                     "minSheetLength": 0,
-                    "maxSheetLength": 1.5,
+                    "maxSheetLength": 1.1,
                     "foil": {
                         "chordLine": {
                             "start": { "x": 0, "y": 0 },
-                            "end": { "x": 3, "y": 0 }
+                            "end": { "x": 2, "y": 0 }
                         },
-                        "sliceZ": 0.2,
+                        "sliceZ": 2.5,
                         "area": 11.01,
                         "aspectRatio": 3,
                         "libClCdCurve": "Sail"
                     }
                 }
             ],
-            "hydroFoils": [ 
+            "hydrofoils": [ 
                 {
                     "className": "LBSailSim.FoilInstance",
                     "name": "keel",
+                    "dumpFoilDetails": true,
                     "mass": 200,
-                    "centerOfMass": { "x": 0.5, "y": 0, "z": -1 },
                     "massRadius": 4,
+                    "velocityTerms": 3,
                     "obj3D": {
-                        "position" : { "x": 2.2, "y": 0, "z": 0 },
+                        "position" : { "x": 2.0, "y": 0, "z": 0 },
                         "rotation": { "exd": 0, "eyd": 0, "ezd": 0 }
                         },
                     "foil": {
@@ -75,24 +204,26 @@
                             "start": { "x": 0, "y": 0 },
                             "end": { "x": 1, "y": 0 }
                         },
-                        "sliceZ": 0.2,
+                        "sliceZ": -0.5,
                         "area": 0.75,
                         "aspectRatio": 3,
                         "libClCdCurve": "FlatPlate"
                     }
                 },
                 {
+                    "_className": "undefined",
                     "name": "rudder",
+                    "dumpFoilDetails": true,
                     "mass": 4,
-                    "centerOfMass": { "x": 0.15, "y": 0, "z": -0.5 },
                     "massRadius": 4,
+                    "velocityTerms": 3,
                     "obj3D": {
                         "position" : { "x": 5.4, "y": 0, "z": 0 },
                         "rotation": { "exd": 0, "eyd": 0, "ezd": 0 }
-                        },
+                    },
                     "phaser_sprite": {
                         "key": "tubby_rudder",
-                        "lbLocalOffset": {
+                        "_lbLocalOffset": {
                             "x": 0.3,
                             "y": 0
                         },
@@ -100,13 +231,52 @@
                             "x": 1,
                             "y": 0.5
                         }
-                        },
+                    },
+                    "volumes": {
+                        "vertices": [
+                            -1.00, -0.01, 0.70,
+                            -1.00, -0.01, 0.72,
+                            0.03, -0.01, 0.73,
+                            0.03, -0.01, -0.75,
+                            0.00, -0.01, -0.70,
+                            0.00, -0.01, 0.60,
+                            0.03, -0.01, 0.30,
+                            0.25, -0.01, 0.00,
+                            0.30, -0.01, -0.75,
+                            
+                            -1.00, 0.01, 0.70,
+                            -1.00, 0.01, 0.72,
+                            0.03, 0.01, 0.73,
+                            0.03, 0.01, -0.75,
+                            0.00, 0.01, -0.70,
+                            0.00, 0.01, 0.60,
+                            0.03, 0.01, 0.30,
+                            0.25, 0.01, 0.00,
+                            0.30, 0.01, -0.75
+                        ],
+                        "indices": [
+                            [ 0, 5, 2, 1, 9, 14, 11, 10 ],
+                            [ 5, 4, 3, 2, 14, 13, 12, 11 ],
+                            [ 6, 3, 8, 7, 15, 12, 17, 16 ]
+                        ],
+                        "panels": [
+                            {
+                                "frameColor": "0x000000",
+                                "closeFrame": true,
+                                "fillColor": "0x000088",
+                                "volFaces": [0,0, 0,2, 0,3, 0,4, 0,4, 
+                                    1,0, 1,1, 1,2, 1,3, 1,4, 
+                                    2,0, 2,1, 2,2, 2,3, 2,5 
+                                ]
+                            }
+                        ]
+                    },
                     "foil": {
                         "chordLine": {
                             "start": { "x": 0, "y": 0 },
                             "end": { "x": 0.3, "y": 0 }
                         },
-                        "sliceZ": 0.2,
+                        "sliceZ": -0.2,
                         "area": 0.3,
                         "aspectRatio": 5,
                         "libClCdCurve": "FlatPlate"
@@ -119,10 +289,10 @@
                     "mass": 0,
                     "obj3D": {
                         "position" : { "x": 1.8, "y": 0, "z": 0 },
-                        "rotation": { "exd": 0, "eyd": 0, "ezd": 0 }
+                        "rotation": { "exd": 0, "eyd": 0, "ezd": 180 }
                     },
                     "minForce": -250,
-                    "maxForce": 1000
+                    "maxForce": 5000
                 }
             ],
             "ballasts": [],
@@ -139,7 +309,7 @@
                     "name": "Rudder",
                     "minValue": -90,
                     "maxValue": 90,
-                    "currentValue": 0                    
+                    "currentValue": 0
                 },
                 {
                     "className": "LBSailSim.ThrottleController",
@@ -155,136 +325,7 @@
                     "sailName": "mainsail",
                     "minValue": 0,
                     "maxValue": 1,
-                    "currentValue": 0.5                    
-                }
-            ]
-        },
-        {
-            "typeName": "YD-40",
-            "description": "YD-40 from Principles of Yacht Design, 3rd edition, Larsson & Eliasson",
-            "p2Body": {
-                "sprite": {
-                    "key": "yd40",
-                    "anchor": {
-                        "x": 0.5,
-                        "y": 0.5
-                    }
-                }
-            },
-            "mass": 7820,
-            "centerOfMass": { "x": 0, "y": 0, "z": 0 },
-            "momentInertia": { "xx": 1, "yy": 1, "zz": 1000 },
-            "hull": {
-                "lwl": 10.02,
-                "bwl": 3.17,
-                "tc": 0.57,
-                "delC": 7.63,
-                "k": 200e-6,
-                "centerOfBuoyancy": { "x": -0.3 }
-            },
-            "airfoils": [
-                {
-                    "name": "mainsail",
-                    "mass": 20,
-                    "centerOfMass": { "x": 0, "y": 0, "z": 4 },
-                    "obj3D": {
-                        "position" : { "x": 0, "y": 0, "z": 0 },
-                        "rotation": { "exd": 0, "eyd": 0, "ezd": 0 }
-                        },
-                    "phaser_sprite": {
-                        "key": "tubby_mainsail",
-                        "anchor": {
-                            "x": 0,
-                            "y": 0
-                        }
-                        },
-                    "foil": {
-                        "chordLine": {
-                            "start": { "x": 0, "y": 0 },
-                            "end": { "x": -1, "y": 0 }
-                        },
-                        "sliceZ": 0.2,
-                        "area": 0.3,
-                        "aspectRatio": 3,
-                        "libClCdCurve": "FlatPlate"
-                    }
-                }
-            ],
-            "hydroFoils": [ 
-                {
-                    "name": "keel",
-                    "mass": 100,
-                    "centerOfMass": { "x": -0.5, "y": 0, "z": -1 },
-                    "obj3D": {
-                        "position" : { "x": 0, "y": 0, "z": 0 },
-                        "rotation": { "exd": 0, "eyd": 0, "ezd": 0 }
-                        },
-                    "foil": {
-                        "chordLine": {
-                            "start": { "x": 0, "y": 0 },
-                            "end": { "x": -1, "y": 0 }
-                        },
-                        "sliceZ": 0.2,
-                        "area": 0.3,
-                        "aspectRatio": 3,
-                        "libClCdCurve": "FlatPlate"
-                    }
-                },
-                {
-                    "name": "rudder",
-                    "mass": 4,
-                    "centerOfMass": { "x": -0.15, "y": 0, "z": -0.5 },
-                    "obj3D": {
-                        "position" : { "x": -2, "y": 0, "z": 0 },
-                        "rotation": { "exd": 0, "eyd": 0, "ezd": 0 }
-                        },
-                    "phaser_sprite": {
-                        "key": "tubby_mainsail",
-                        "anchor": {
-                            "x": 0,
-                            "y": 0
-                        }
-                        },
-                    "foil": {
-                        "chordLine": {
-                            "start": { "x": 0, "y": 0 },
-                            "end": { "x": -0.3, "y": 0 }
-                        },
-                        "sliceZ": 0.2,
-                        "area": 0.1,
-                        "aspectRatio": 5,
-                        "libClCdCurve": "FlatPlate"
-                    }
-                }
-            ],
-            "propulsors": [
-                {
-                    "name": "engine",
-                    "mass": 0,
-                    "obj3D": {
-                        "position" : { "x": -1.8, "y": 0, "z": 0 },
-                        "rotation": { "exd": 0, "eyd": 0, "ezd": 0 }
-                    },
-                    "minForce": -25,
-                    "maxForce": 100
-                }
-            ],
-            "ballasts": [],
-            "controllers": [
-                {
-                    "className": "LBSailSim.RudderController",
-                    "name": "Rudder",
-                    "minValue": -45,
-                    "maxValue": 45,
-                    "currentValue": 0                    
-                },
-                {
-                    "className": "LBSailSim.ThrottleController",
-                    "name": "Throttle",
-                    "propulsorName": "engine",
-                    "minValue": -5,
-                    "maxValue": 10,
-                    "currentValue": 0
+                    "currentValue": 0.5
                 }
             ]
         }

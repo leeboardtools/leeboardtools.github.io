@@ -15,7 +15,7 @@
  */
 
 
-/* global LBMath, Leeboard, LBGeometry */
+/* global LBMath, LBUtil, LBGeometry */
 
 /**
  * @namespace LBControls
@@ -25,10 +25,10 @@ var LBControls = LBControls || {};
 /**
  * A controller whose value is any value between a minimum and a maximum value.
  * @constructor
- * @param {string} [name=""]    The name for the controller, used to identify the controller.
- * @param {number} [minValue=0] The minimum value allowed.
- * @param {number} [maxValue=100]   The maximum value allowed.
- * @param {number} [initialValue=minValue]  The initial value.
+ * @param {String} [name=""]    The name for the controller, used to identify the controller.
+ * @param {Number} [minValue=0] The minimum value allowed.
+ * @param {Number} [maxValue=100]   The maximum value allowed.
+ * @param {Number} [initialValue=minValue]  The initial value.
  * @param {Function} controllee The function called whenever the controller's value is changed.
  * @returns {LBControls.SmoothController}
  */
@@ -37,13 +37,13 @@ LBControls.SmoothController = function(name, minValue, maxValue, initialValue, c
     
     /**
      * The minimum value allowed by the controller.
-     * @member {number}
+     * @member {Number}
      */
     this.minValue = minValue || 0;
     
     /**
      * The maximum value allowed by the controller.
-     * @member {number}
+     * @member {Number}
      */
     this.maxValue = maxValue || 100;
     if (this.minValue > this.maxValue) {
@@ -54,7 +54,7 @@ LBControls.SmoothController = function(name, minValue, maxValue, initialValue, c
     
     /**
      * The current value of the controller.
-     * @member {number}
+     * @member {Number}
      */
     this.currentValue = initialValue || this.minValue;
     
@@ -68,8 +68,6 @@ LBControls.SmoothController = function(name, minValue, maxValue, initialValue, c
 };
 
 LBControls.SmoothController.prototype = {
-    constructor: LBControls.SmoothController,
-    
     /**
      * Retrieves the current value of the controller.
      * @returns {Number}
@@ -80,7 +78,7 @@ LBControls.SmoothController.prototype = {
     
     /**
      * Sets the value for the controller.
-     * @param {number} value    The new value.
+     * @param {Number} value    The new value.
      * @param {Boolean} isOffset    If true value is an offset to be added to the
      * current value of the controller.
      * @returns {LBControls.SmoothController} this.
@@ -135,11 +133,23 @@ LBControls.SmoothController.prototype = {
         this.currentValue = LBMath.clamp(this.currentValue, this.minValue, this.maxValue);
         
         if (data.offsetValueMapper) {
-            this.offsetValueMapper = Leeboard.newClassInstanceFromData(data.offsetValueMapper);
+            this.offsetValueMapper = LBUtil.newClassInstanceFromData(data.offsetValueMapper);
         }
         
         return this;
-    }
+    },
+
+    /**
+     * Call when done with the object to have it release any internal references
+     * to other objects to help with garbage collection.
+     * @returns {undefined}
+     */
+    destroy: function() {
+        this.name = null;
+        this.controllee = null;
+    },
+    
+    constructor: LBControls.SmoothController    
 };
 
 /**
@@ -158,12 +168,23 @@ LBControls.CSplineValueMapper.prototype = {
     /**
      * Maps an offset value by multiplying it by the interpolated value from the spline for
      * the current controller value.
-     * @param {number} currentValue The current controller value.
-     * @param {number} offset   The offset value to be mapped.
-     * @returns {number}    The mapped offset value.
+     * @param {Number} currentValue The current controller value.
+     * @param {Number} offset   The offset value to be mapped.
+     * @returns {Number}    The mapped offset value.
      */
     mapOffset: function(currentValue, offset) {
         return this.cSpline.interpolate(currentValue) * offset;
+    },
+    
+    /**
+     * Call when done with the object to have it release any internal references
+     * to other objects to help with garbage collection.
+     * @returns {undefined}
+     */
+    destroy: function() {
+        if (this.cSpline) {
+            this.cSpline = this.cSpline.destroy();
+        }
     },
     
     constructor: LBControls.CSplineValueMapper
@@ -174,9 +195,9 @@ LBControls.CSplineValueMapper.prototype = {
  * A controller that takes on a discrete set of values. The actual value of the controller
  * is an index into the discrete set of values.
  * @constructor
- * @param {string} [name=""]    The name of the controller, used to identify it.
+ * @param {String} [name=""]    The name of the controller, used to identify it.
  * @param {Array} [steps]   An array containing the 'steps' of the controller.
- * @param {number} [initialValue=0] The initial value of the controller.
+ * @param {Number} [initialValue=0] The initial value of the controller.
  * @param {Function} [controllee]   The function called whenever the current value of the controller
  * is changed.
  * @returns {LBControls.SteppedController}
@@ -184,7 +205,7 @@ LBControls.CSplineValueMapper.prototype = {
 LBControls.SteppedController = function(name, steps, initialValue, controllee) {
     /**
      * The name of the controller.
-     * @member {string}
+     * @member {String}
      */
     this.name = name || "";
     
@@ -210,6 +231,15 @@ LBControls.SteppedController = function(name, steps, initialValue, controllee) {
 };
 
 LBControls.SteppedController.prototype = {
+    /**
+     * Call when done with the object to have it release any internal references
+     * to other objects to help with garbage collection.
+     * @returns {undefined}
+     */
+    destroy: function() {
+        this.controllee = null;        
+    },
+    
     constructor: LBControls.SteppedController,
     
     /**
@@ -230,7 +260,7 @@ LBControls.SteppedController.prototype = {
     
     /**
      * Changes the current value.
-     * @param {number} value    The current value, which is an index.
+     * @param {Number} value    The current value, which is an index.
      * @returns {LBControls.SteppedController}  this.
      */
     setValue: function(value) {
@@ -260,7 +290,7 @@ LBControls.SteppedController.prototype = {
         this.name = data.name || "";
         
         if (data.steps) {
-            this.steps = data.steps.slice(0, data.steps.length);
+            this.steps = data.steps.slice();
         }
         
         this.currentValue = data.currentValue || 0;
@@ -284,7 +314,7 @@ LBControls.createControllerFromData = function(data, owner) {
     
     var controller;
     if (data.className) {
-        controller = Leeboard.newClassInstanceFromData(data);
+        controller = LBUtil.newClassInstanceFromData(data);
     }
     else {
         controller = new LBControls.SmoothController();
