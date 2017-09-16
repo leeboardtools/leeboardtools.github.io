@@ -62,6 +62,25 @@ LoadingState.create = function() {
 //--------------------------------------------------
 PlayState = {};
 
+PlayState.settings = {
+    startSingleStep: false,
+    sailSimViewConstructor: LBSailSim.Phaser3DView,
+    
+    startBoatType: "Tubby",
+    startBoatName: "TubbyA",
+    
+    startPixelsX: 400,
+    startPixelsY: 0,
+    startRotationDeg: -90,
+    
+    startRollDeg: 0,
+    startPitchDeg: 0,
+    
+    physicsEngine: LBSailSim.PhaserSailEnv.CANNON_PHYSICS
+    
+};
+
+//PlayState.settings.physicsEngine = LBSailSim.PhaserSailEnv.P2_PHYSICS;
 
 //
 //
@@ -77,6 +96,8 @@ PlayState.init = function() {
         five: Phaser.KeyCode.FIVE,    // Force 5
         six: Phaser.KeyCode.SIX,    // Force 6
         seven: Phaser.KeyCode.SEVEN,    // Force 7
+        plus: 61, //Phaser.KeyCode.PLUS,
+        minus: 173, //Phaser.KeyCode.MINUS,
         // a
         // b
         // c
@@ -128,6 +149,13 @@ PlayState.init = function() {
         this.setWindForce(7);
     }, this);
     
+    this.keys.plus.onDown.add(function() {
+        this.sailEnv.wind.setAverageFromDeg(this.sailEnv.wind.averageFromDeg + 10);
+    }, this);
+    this.keys.minus.onDown.add(function() {
+        this.sailEnv.wind.setAverageFromDeg(this.sailEnv.wind.averageFromDeg - 10);
+    }, this);
+    
     this.keys.d.onDown.add(this.toggleDebug, this);
     this.keys.f.onDown.add(this.toggleForceArrows, this);
     this.keys.p.onDown.add(this.togglePause, this);
@@ -135,12 +163,9 @@ PlayState.init = function() {
     this.keys.t.onDown.add(this.doTest, this);
     this.keys.v.onDown.add(this.toggleVelocityArrows, this);
     
-    var physicsEngine = LBSailSim.PhaserSailEnv.P2_PHYSICS;
-    physicsEngine = LBSailSim.PhaserSailEnv.CANNON_PHYSICS;
-    this.sailEnv = new LBSailSim.PhaserSailEnv(this.game, physicsEngine);
+    this.sailEnv = new LBSailSim.PhaserSailEnv(this.game, PlayState.settings.physicsEngine);
     
-    // TEST!!!
-//    this.isSingleStep = true;
+    this.isSingleStep = PlayState.settings.startSingleStep;
     
 //    LBSailSim.FoilInstance.addDebugFields('rudder');
 //    LBDebug.DataLog.addSpacer();
@@ -268,8 +293,7 @@ PlayState._loadLevel = function (data) {
     this.buoys = this.game.add.group(this.worldGroup);    
     data.buoys.forEach(this._spawnBuoys, this);
 
-    this.sailSimView = new LBSailSim.Phaser3DView(this.sailEnv, this.worldGroup);
-    //this.sailSimView = new LBSailSim.Phaser2DView(this.sailEnv, this.worldGroup);
+    this.sailSimView = new PlayState.settings.sailSimViewConstructor(this.sailEnv, this.worldGroup);
     
     this._spawnCharacters({myBoat: data.myBoat });
     
@@ -292,28 +316,24 @@ PlayState._spawnCharacters = function (data) {
     var centerX = 0;
     var centerY = 0;
     var rotation = 0;
-    
-    centerX = this.sailEnv.phaserEnv.fromPixelsX(200);
-    centerY = this.sailEnv.phaserEnv.fromPixelsY(100);
-    rotation = this.sailEnv.phaserEnv.fromPixelsRotationDeg(-60);
 
-    centerX = this.sailEnv.phaserEnv.fromPixelsX(400);
-    centerY = this.sailEnv.phaserEnv.fromPixelsY(0);
-    rotation = this.sailEnv.phaserEnv.fromPixelsRotationDeg(-90);
+    if (PlayState.settings.startMetersX !== undefined) {
+        centerX = PlayState.settings.startMetersX;
+    }
+    else {
+        centerX = this.sailEnv.phaserEnv.fromPixelsX(PlayState.settings.startPixelsX);
+    }
+    if (PlayState.settings.startMetersY !== undefined) {
+        centerY = PlayState.settings.startMetersY;
+    }
+    else {
+        centerY = this.sailEnv.phaserEnv.fromPixelsY(PlayState.settings.startPixelsY);
+    }
+    rotation = this.sailEnv.phaserEnv.fromPixelsRotationDeg(PlayState.settings.startRotationDeg);
     
-    var rollDeg = 0;
-    var pitchDeg = 0;
-    rollDeg = 0;
-    pitchDeg = 0;
-    //this.myBoat = new Boat(this.game, this.sailEnv, centerX, centerY, data.myBoat);
-    this.myBoat = this.sailEnv.checkoutBoat("Tubby", "TubbyA", centerX, centerY, rotation, rollDeg, pitchDeg);
-    
-//    this.otherBoat = this.sailEnv.checkoutBoat("Tubby", "TubbyB", centerX, centerY - 10, 0);
-    // TEST!!!
-    var roll = 20;
-    var pitch = 0;
-    this.myBoat.obj3D.setRotationFromEuler(new LBGeometry.Euler(roll * LBMath.DEG_TO_RAD, pitch * LBMath.DEG_TO_RAD, 0));
-    this.myBoat.obj3D.updateMatrixWorld(true);
+    var rollDeg = PlayState.settings.startRollDeg;
+    var pitchDeg = PlayState.settings.startPitchDeg;
+    this.myBoat = this.sailEnv.checkoutBoat(PlayState.settings.startBoatType, PlayState.settings.startBoatName, centerX, centerY, rotation, rollDeg, pitchDeg);    
 };
 
 //--------------------------------------------------
@@ -417,6 +437,13 @@ PlayState._setupHUD = function() {
     this.fResiduaryText = this.game.add.text(left, top, "Residuary Drag Force: 0", style);
     this.hud.add(this.fResiduaryText);
     top += this.fResiduaryText.height + vSpacing;
+    
+    top += this.fResiduaryText.height + vSpacing;
+    this.keyHelpText = this.game.add.text(left, top, "Keys:\nWind: 1-7 Force; - back; = veer\nSpace center rudder\nP toggle Pause, S single step\n"
+        + "F toggle force arrows\nV toggle velocity arrows\nArrow keys rudder/mainsheet", 
+        style);
+    this.hud.add(this.keyHelpText);
+    top += this.keyHelpText.height + vSpacing;
 
     this.hInset = 5;
     this.vInset = 5;
