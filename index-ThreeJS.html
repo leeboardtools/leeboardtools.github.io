@@ -82,7 +82,7 @@ and open the template in the editor.
             #right_controls {
                 position: absolute;
                 top: 50%;
-                right: 5px;
+                right: 10px;
                 transform: translateY(-50%);
                
                 z-index: 110;
@@ -96,10 +96,12 @@ and open the template in the editor.
             
             .vertical_slider {
                 width: 200px;
+                margin: 2px;
             }
 
             .horizontal_slider {
                 width: 200px;
+                margin: 2px;
             }
             
             #vsheet_controls {
@@ -115,7 +117,7 @@ and open the template in the editor.
             #bottom_controls {
                 position: absolute;
                 left: 50%;
-                bottom: 5px;
+                bottom: 10px;
                 width: 220px;
                 transform: translateX(-110px);
                 z-index: 120;
@@ -126,6 +128,95 @@ and open the template in the editor.
 */
             }
             
+input[type=range] {
+  height: 39px;
+  -webkit-appearance: none;
+  margin: 10px 0;
+  width: 100%;
+}
+input[type=range]:focus {
+  outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 5px;
+  cursor: pointer;
+  animate: 0.2s;
+  box-shadow: 0px 0px 0px #000000;
+  background: #2497E3;
+  border-radius: 1px;
+  border: 0px solid #000000;
+}
+input[type=range]::-webkit-slider-thumb {
+  box-shadow: 0px 0px 0px #000000;
+  border: 1px solid #2497E3;
+  height: 32px;
+  width: 32px;
+  border-radius: 32px;
+  background: #8FB9E3;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -14px;
+}
+input[type=range]:focus::-webkit-slider-runnable-track {
+  background: #2497E3;
+}
+input[type=range]::-moz-range-track {
+  width: 100%;
+  height: 5px;
+  cursor: pointer;
+  animate: 0.2s;
+  box-shadow: 0px 0px 0px #000000;
+  background: #2497E3;
+  border-radius: 1px;
+  border: 0px solid #000000;
+}
+input[type=range]::-moz-range-thumb {
+  box-shadow: 0px 0px 0px #000000;
+  border: 1px solid #2497E3;
+  height: 32px;
+  width: 32px;
+  border-radius: 32px;
+  background: #8FB9E3;
+  cursor: pointer;
+}
+input[type=range]::-ms-track {
+  width: 100%;
+  height: 5px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+input[type=range]::-ms-fill-lower {
+  background: #2497E3;
+  border: 0px solid #000000;
+  border-radius: 2px;
+  box-shadow: 0px 0px 0px #000000;
+}
+input[type=range]::-ms-fill-upper {
+  background: #2497E3;
+  border: 0px solid #000000;
+  border-radius: 2px;
+  box-shadow: 0px 0px 0px #000000;
+}
+input[type=range]::-ms-thumb {
+  margin-top: 1px;
+  box-shadow: 0px 0px 0px #000000;
+  border: 1px solid #2497E3;
+  height: 32px;
+  width: 32px;
+  border-radius: 32px;
+  background: #8FB9E3;
+  cursor: pointer;
+}
+input[type=range]:focus::-ms-fill-lower {
+  background: #2497E3;
+}
+input[type=range]:focus::-ms-fill-upper {
+  background: #2497E3;
+}
         </style>
     </head>
         <body>
@@ -141,8 +232,8 @@ and open the template in the editor.
             </div>
             <div id="right_controls">
                 <div id="vsheet_controls">
-                    <div><input id="mainsheet" class="vertical_slider" type="range" value="0" min="-100" max="100"></div>
                     <div><input id="jibsheet" class="vertical_slider" type="range" value="0" min="-100" max="100"></div>
+                    <div><input id="mainsheet" class="vertical_slider" type="range" value="0" min="-100" max="100"></div>
                 </div>
             </div>
             <div id="bottom_controls">
