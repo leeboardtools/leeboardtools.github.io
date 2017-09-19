@@ -51,8 +51,8 @@ and open the template in the editor.
             }
             
             body {
-                margin: 0px;
-                padding: 0;
+                margin: 5px;
+                padding: 5px;
                 overflow: hidden;   /* Gets rid of the scroll bars */
             }
             canvas {
@@ -227,8 +227,8 @@ and open the template in the editor.
                 height: 40%;
                 z-index: 1;
                 
-                transition: 0.6s all;
-                background-color: yellow;
+                transition: 0.4s all;
+                background-color: rgba(0, 0, 256, 0.3);
             }
             .pip_view_left {
                 position: absolute;
@@ -247,8 +247,8 @@ and open the template in the editor.
                 height: 30%;
                 z-index: 1;
                 
-                transition: 0.6s all;
-                background-color: blue;
+                transition: 0.4s all;
+                background-color: rgba(0, 0, 256, 0.3);
             }
             
             .pip_label {
@@ -392,11 +392,17 @@ and open the template in the editor.
                 </div>
             </div>
             
+            <script>
+                function appWindTest(val) {
+                    document.getElementById("app_wind_dial").style.transform = "rotate(" + val + "deg)";
+                }
+            </script>
+            
             <div id="bottom_controls">
                 <div id="hull_controls">
                     <div id="rudder_slider">
                         <div class="slider_top_label">Rudder</div>
-                        <div><input id="rudder" class="horizontal_slider" type="range" value="0" min="-100" max="100"></div>
+                        <div><input id="rudder" class="horizontal_slider" type="range" value="0" min="-100" max="100" oninput="appWindTest(value)"></div>
                     </div>
                     <div id="throttle_slider">
                         <div class="slider_bottom_label">Throttle</div>
@@ -422,7 +428,9 @@ and open the template in the editor.
             </div>
         </div>
 
+
         <script src="js/main-ThreeJS.js"></script>
+
 
     </body>
 </html>
