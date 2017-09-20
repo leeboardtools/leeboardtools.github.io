@@ -172,7 +172,7 @@ and open the template in the editor.
                 width: 30px;
             }
             .hud_popup_table td:nth-child(2) {
-                width: 60px;
+                width: 40px;
             }
             .hud_popup_table td:nth-child(3) {
                 width: 20px;
@@ -315,13 +315,13 @@ and open the template in the editor.
                         </tr>
                         <tr>
                             <td>VMG</td>
-                            <td id="hud_vmg">00.0</td>
+                            <td id="hud_vmg">-00.0</td>
                             <td>kt</td>
                         </tr>
                         <tr>
                             <td>LWY</td>
                             <td id="hud_leeway">0.0</td>
-                            <td>&deg;</td>
+                            <td>&deg;S</td>
                         </tr>
                     </table>
                 </div>
@@ -392,17 +392,11 @@ and open the template in the editor.
                 </div>
             </div>
             
-            <script>
-                function appWindTest(val) {
-                    document.getElementById("app_wind_dial").style.transform = "rotate(" + val + "deg)";
-                }
-            </script>
-            
             <div id="bottom_controls">
                 <div id="hull_controls">
                     <div id="rudder_slider">
                         <div class="slider_top_label">Rudder</div>
-                        <div><input id="rudder" class="horizontal_slider" type="range" value="0" min="-100" max="100" oninput="appWindTest(value)"></div>
+                        <div><input id="rudder" class="horizontal_slider" type="range" value="0" min="-100" max="100"></div>
                     </div>
                     <div id="throttle_slider">
                         <div class="slider_bottom_label">Throttle</div>
@@ -426,11 +420,58 @@ and open the template in the editor.
                 <input type="checkbox" id="pip_map_cb" class="pip_checkbox">
                 <div id="pip_map_div" class="pip_view_map"></div>
             </div>
+            
+            <script>
+                function toggleFullScreen() {
+                    var element = document.getElementById("container");
+                    var fullscreenEnabled;
+                    var fullscreenElement;
+                    var requestFullscreen;
+                    var exitFullscreen;
+                    if (element.requestFullScreen) {
+                        fullscreenEnabled = document.fullscreenEnabled;
+                        fullscreenElement = document.fullscreenElement;
+                        requestFullscreen = element.requestFullScreen;
+                        exitFullscreen = document.exitFullscreen;
+                    }
+                    else if (element.webkitRequestFullscreen) {
+                        fullscreenEnabled = document.webkitFullscreenEnabled;
+                        fullscreenElement = document.webkitFullscreenElement;
+                        requestFullscreen = element.webkitRequestFullScreen;
+                        exitFullscreen = document.webkitExitFullscreen;
+                    }
+                    else if (element.mozRequestFullScreen) {
+                        fullscreenEnabled = document.mozFullscreenEnabled;
+                        fullscreenElement = document.mozFullscreenElement;
+                        requestFullscreen = element.mozRequestFullScreen;
+                        exitFullscreen = document.mozCancelFullscreen;
+                    }
+                    else if (element.msRequestFullscreen) {
+                        fullscreenEnabled = document.msFullscreenEnabled;
+                        fullscreenElement = document.msFullscreenElement;
+                        requestFullscreen = element.msRequestFullScreen;
+                        exitFullscreen = document.msExitFullscreen;
+                    }
+                    else {
+                        return;
+                    }
+                    if (!fullscreenEnabled) {
+                        return;
+                    }
+                    if (fullscreenElement) {
+                        exitFullscreen.call(document);
+                    }
+                    else {
+                        requestFullscreen.call(element);
+                    }
+                }
+            </script>
+            <button style="position:absolute; left:50%" onclick="toggleFullScreen()">Full Screen</button>
         </div>
 
-
+<!--
         <script src="js/main-ThreeJS.js"></script>
-
+-->
 
     </body>
 </html>
