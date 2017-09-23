@@ -90,8 +90,10 @@ and open the template in the editor.
             
             #right_controls {
                 position: absolute;
-                top: 300px;
+                top: 50%;
                 right: 10px;
+                width: 30rem;
+                max-width: 50%;
                 transform: translateY(-50%);
                 z-index: 110;
             }
@@ -186,9 +188,6 @@ and open the template in the editor.
                 visibility: visible;
             }
             
-            .hud_popup {
-                
-            }
             
             /* Table for a HUD info display */
             .hud_popup_table {
@@ -217,15 +216,15 @@ and open the template in the editor.
             }
             
             #hud_boat {
-                top: 90px;
+                top: 7rem;
             }
             
             #hud_numeric_wind {
-                top: 180px;
+                top: 16rem;
             }
             
             #hud_force {
-                top: 240px;
+                top: 22rem;
             }
             
             /* A wind indicator, normally has a speed indicator and a dial */
@@ -343,6 +342,7 @@ and open the template in the editor.
                 height: 1.5rem;
             }
             
+            /* A menu button */
             .menu_button {
                 text-align: center;
                 font-size: 1.5rem;
@@ -361,7 +361,8 @@ and open the template in the editor.
                 background-color: darkgray;
             }
             
-            .top_menu_button {
+            /* A menu button that's aligned horizontally */
+            .horiz_menu_button {
                 float: left;
             }
             
@@ -379,6 +380,7 @@ and open the template in the editor.
                 
             }
 
+            /* One of the two PIP views along the bottom of the screen */
             .pip_view_bottom {
                 position: absolute;
                 bottom: 0px;
@@ -388,10 +390,13 @@ and open the template in the editor.
                 
                 transition: 0.4s all;
             }
+            
+            /* A PIP view aligned along the left side of the screen */
             .pip_view_left {
                 position: absolute;
                 left: -50%;
             }
+            /* A PIP view aligned along the right side of the screen */
             .pip_view_right {
                 position: absolute;
                 right: -50%;
@@ -411,7 +416,8 @@ and open the template in the editor.
                 background-color: rgba(0, 0, 256, 0.3);
             }
             
-            .pip_label {
+            /* The element that toggles a PIP view */
+            .pip_btn {
                 font-size: 1.5rem;
                 text-shadow: 2px 2px 1px gray;
                 color: darkblue;
@@ -422,7 +428,7 @@ and open the template in the editor.
                 border-style: none;
             }
             
-            .pip_label:hover {
+            .pip_btn:hover {
                 background-color: darkgray;
             }
             
@@ -496,10 +502,10 @@ and open the template in the editor.
                 </div>
 
                 <div id="menu_bar_top">
-                    <div id="menu_full_screen" class="menu_button top_menu_button" onclick="myApp.toggleFullScreen(document.getElementById('container'))">
+                    <div id="menu_full_screen" class="menu_button horiz_menu_button" onclick="myApp.toggleFullScreen(document.getElementById('container'))">
                         <i class="material-icons">&#xE5D0;</i>
                     </div>
-                    <div id="menu_mouse_mode" class="menu_button top_menu_button" onclick="myApp.nextMouseMode()">
+                    <div id="menu_mouse_mode" class="menu_button horiz_menu_button" onclick="myApp.nextMouseMode()">
                         <i class="material-icons">&#xE89F;</i>
                     </div>
                 </div>
@@ -630,15 +636,15 @@ and open the template in the editor.
             -->
 
             <div>
-                <div id="pip_map_btn" class="pip_label" onclick="myApp.toggleMap()"><i class="material-icons">&#xE55B;</i></div>
+                <div id="pip_map_btn" class="pip_btn" onclick="myApp.toggleMap()"><i class="material-icons">&#xE55B;</i></div>
                 <div id="pip_map" class="pip_view_map"></div>
             </div>
             <div>
-                <div id="pip_lower_left_btn" class="pip_label" onclick="myApp.togglePIPLowerLeft()"><i class="material-icons">&#xE5CC;</i></div>
+                <div id="pip_lower_left_btn" class="pip_btn" onclick="myApp.togglePIPLowerLeft()"><i class="material-icons">&#xE5CC;</i></div>
                 <div id="pip_lower_left" class="pip_view_bottom pip_view_left"></div>
             </div>
             <div>
-                <div id="pip_lower_right_btn" class="pip_label" onclick="myApp.togglePIPLowerRight()"><i class="material-icons">&#xE5CB;</i></div>
+                <div id="pip_lower_right_btn" class="pip_btn" onclick="myApp.togglePIPLowerRight()"><i class="material-icons">&#xE5CB;</i></div>
                 <div id="pip_lower_right" class="pip_view_bottom pip_view_right"></div>
             </div>
             
