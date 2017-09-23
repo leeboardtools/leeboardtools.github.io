@@ -21,7 +21,6 @@ var LBUI3d = LBUI3d || {};
 
 LBUI3d.Scene3D = function() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xcccccc);
     this.scene.add(new THREE.AmbientLight(0x222222));
     
     this.mainLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -33,3 +32,6 @@ LBUI3d.Scene3D.prototype = {
     constructor: LBUI3d.Scene3D
 };
 
+LBUI3d.Scene3D.prototype.getBackgroundColor = function() {
+    return this.scene.background;
+};

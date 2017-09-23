@@ -17,11 +17,6 @@
 
 /* global THREE, LBSailSim, LBUI3d, LBMath, LBUtil */
 
-var mainScene;
-var mainView;
-
-var windDeg = 0;
-var windForce = 2;
 
 /*
  * Some colors:
@@ -37,12 +32,53 @@ var windForce = 2;
  * F8 Bright red:      rgb(255, 0, 0)      hsl(0, 100%, 50%)
  */
 
-function init() {
-    mainScene = new LBUI3d.Scene3D();
+LBMyApp = function() {
+    LBUI3d.App3D.call(this);
     
     var mainViewContainer = document.getElementById('main_view');
-    mainView = new LBUI3d.View3D(mainScene, mainViewContainer);
-    var scene = mainScene.scene;
+    this.mainView = new LBUI3d.View3D(this.mainScene, mainViewContainer);
+    this.addNormalView(this.mainView);
+    
+    this.pipLowerLeftView = undefined;
+    this.pipLowerRightView = undefined;
+    
+    this.pipMapView = undefined;
+    
+    this.fpsElement = document.getElementById('hud_fps');
+    this.appWindDirElement = document.getElementById('app_wind_dial');
+    
+    this.isHUDBoatOn = false;
+    this.isHUDWindOn = false;
+    this.isHUDForceOn = false;
+
+    this.rudderSliderElement = document.getElementById('rudder_slider');
+    this.throttleSliderElement = document.getElementById('throttle_slider');
+    
+    this.mainsheetSliderElement = document.getElementById('main_slider');
+    this.jibsheetSliderElement = document.getElementById('jib_slider');
+    
+    this.windDeg = 0;
+    this.windForce = 2;
+
+};
+
+LBMyApp.prototype = Object.create(LBUI3d.App3D.prototype);
+LBMyApp.prototype.constructor = LBMyApp;
+
+LBMyApp.prototype.addNormalView = function(view) {
+    view.installOrbitControls(3, 10000, Math.PI * 0.5);
+    this.addView(view);
+};
+
+LBMyApp.prototype.init = function(mainContainer) {
+    LBUI3d.App3D.prototype.init.call(this, mainContainer);
+
+    if (this.throttleSliderElement) {
+        this.throttleSliderElement.hidden = true;
+    }
+    
+// TEST!!!
+    var scene = this.mainScene.scene;
     
     var geometry = new THREE.BoxGeometry(1, 1, 1);
     var material = new THREE.MeshPhongMaterial({color: 0x008800 });
@@ -50,44 +86,20 @@ function init() {
     cube.rotation.x = 0.3;
     cube.rotation.y = 0.4;
     scene.add(cube);
+// TEST!!!
 
-//    camera.position.z = 5;
+    this.setWindForce(2);
+};
 
-    var throttleSlider = document.getElementById('throttle_slider');
-    if (throttleSlider) {
-//        throttleSlider.hidden = true;
+LBMyApp.prototype.update = function() {
+    LBUI3d.App3D.prototype.update.call(this);
+};
+
+LBMyApp.prototype.fpsUpdated = function() {
+    if (this.fpsElement) {
+        this.fpsElement.textContent = LBMath.round(this.fps);
     }
-    
-    window.addEventListener('resize', onWindowResize, false);
-    
-    setWindForce(2);
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    
-    //cube.rotation.x += 0.01;
-    //cube.rotation.y += 0.01;
-    mainView.render();
-}
-
-function onWindowResize() {
-    mainView.onWindowResize();
-}
-
-function windBack() {
-    windDeg -= 10;
-    windDeg = LBMath.wrapDegrees(windDeg);
-    var element = document.getElementById("app_wind_dial");
-    element.style.transform = "rotate(" + windDeg + "deg)";
-}
-
-function windVeer() {
-    windDeg += 10;
-    windDeg = LBMath.wrapDegrees(windDeg);
-    var element = document.getElementById("app_wind_dial");
-    element.style.transform = "rotate(" + windDeg + "deg)";
-}
+};
 
 function setColorFunctionAlpha(color, alpha) {
     if (color.startsWith('hsla') || color.startsWith('rgba')) {
@@ -101,11 +113,12 @@ function setColorFunctionAlpha(color, alpha) {
     return color;
 }
 
-function setWindForce(force) {
+LBMyApp.prototype.setWindForce = function(force) {
     if ((force < 0) || (force > 8)) {
         return;
     }
-    windForce = force;
+    
+    this.windForce = force;
     var element = document.getElementsByClassName("wind_speed_indicator")[0];
     for (var i = 0; i <= force; ++i) {
         var led = element.getElementsByClassName('wind_speed_led_f' + i)[0];
@@ -118,27 +131,50 @@ function setWindForce(force) {
         var style = window.getComputedStyle(led, null);
         led.style.backgroundColor = setColorFunctionAlpha(style.backgroundColor, ' 0.1');
     }
-}
+};
 
-function windIncrease() {
-    setWindForce(windForce + 1);
-}
+LBMyApp.prototype.windIncrease = function() {
+    this.setWindForce(this.windForce + 1);
+};
 
-function windDecrease() {
-    setWindForce(windForce - 1);
-}
+LBMyApp.prototype.windDecrease = function() {
+    this.setWindForce(this.windForce - 1);
+};
 
-function toggleForceArrows() {
+LBMyApp.prototype.setWindDirDeg = function(dirDeg) {
+    this.windDeg = LBMath.wrapDegrees(dirDeg);
     
-}
+    // TEST!!!
+    this.updateAppWind(this.windDeg, this.windForce);
+};
 
-function toggleVelocityArrows() {
-    
-}
+LBMyApp.prototype.updateAppWind = function(dirDeg, speed) {
+    if (this.appWindDirElement) {
+        this.appWindDirElement.style.transform = "rotate(" + dirDeg + "deg)";
+    }
+   
+};
 
-function toggleWindArrows() {
+LBMyApp.prototype.windBack = function() {
+    this.setWindDirDeg(this.windDeg - 10);
+};
+
+LBMyApp.prototype.windVeer = function() {
+    this.setWindDirDeg(this.windDeg + 10);
+};
+
+
+LBMyApp.prototype.toggleForceArrows = function() {
     
-}
+};
+
+LBMyApp.prototype.toggleVelocityArrows = function() {
+    
+};
+
+LBMyApp.prototype.toggleWindArrows = function() {
+    
+};
 
 function toggleByWidth(element, property, onOffset) {
     onOffset = onOffset || "0px";
@@ -162,68 +198,153 @@ function toggleByHeight(element, property, onOffset) {
     return true;
 }
 
-function toggleHUDBoat() {
+LBMyApp.prototype.toggleHUDBoat = function() {
     var element = document.getElementById("hud_popup_boat");
     var isOn = toggleByWidth(element, "left");
+    this.isHUDBoatOn = isOn;
     
     var label = document.getElementById("hud_label_boat");
     label.style.visibility = (isOn) ? "visible" : "";
-}
+};
 
-function toggleHUDWind() {
+LBMyApp.prototype.toggleHUDWind = function() {
     var element = document.getElementById("hud_popup_wind");
     var isOn = toggleByWidth(element, "left");
+    this.isHUDWindOn = isOn;
     
     var label = document.getElementById("hud_label_wind");
     label.style.visibility = (isOn) ? "visible" : "";
-}
+};
 
-function toggleHUDForce() {
+LBMyApp.prototype.toggleHUDForce = function() {
     var element = document.getElementById("hud_popup_force");
     var isOn = toggleByWidth(element, "left");
+    this.isHUDForceOn = isOn;
     
     var label = document.getElementById("hud_label_force");
     label.style.visibility = (isOn) ? "visible" : "";
-}
+};
 
-function toggleMap() {
+LBMyApp.prototype.toggleMap = function() {
     var element = document.getElementById("pip_map");
+    
+    // Want to keep the map square...
+    if (element.clientWidth > element.clientHeight) {
+        element.clientWidth = element.clientHeight;
+    }
+    else if (element.clientWidth < element.clientHeight) {
+        element.clientHeight = element.clientWidth;
+    }
+    
     var isOn = toggleByWidth(element, "right");
-}
+    if (isOn) {
+        
+    }
+    else {
+        
+    }
+};
 
-function togglePIPLowerLeft() {
+LBMyApp.prototype.createPIPView = function(pipElement) {
+    var view = new LBUI3d.View3D(this.mainScene, pipElement);
+    this.addNormalView(view);
+    return view;
+};
+
+LBMyApp.prototype.togglePIPLowerLeft = function() {
     var element = document.getElementById("pip_lower_left");
     var isOn = toggleByWidth(element, "left");
     
+    if (isOn) {
+        if (!this.pipLowerLeftView) {
+            this.pipLowerLeftView = this.createPIPView(element);
+        }
+        this.pipLowerLeftView.isEnabled = true;
+    }
+    else {
+        if (this.pipLowerLeftView) {
+            this.pipLowerLeftView.isEnabled = false;
+        }
+    }
+    
+    // Flip the arrow direction...
     element = document.getElementById("pip_lower_left_btn");
     var elements = element.getElementsByTagName("i");
     elements[0].innerHTML = (isOn) ? "&#xE5CB;" : "&#xE5CC;";
-}
+};
 
-function togglePIPLowerRight() {
+LBMyApp.prototype.togglePIPLowerRight = function() {
     var element = document.getElementById("pip_lower_right");
     var isOn = toggleByWidth(element, "right");
     
+    if (isOn) {
+        if (!this.pipLowerRightView) {
+            this.pipLowerRightView = this.createPIPView(element);
+        }
+        this.pipLowerRightView.isEnabled = true;
+    }
+    else {
+        if (this.pipLowerRightView) {
+            this.pipLowerRightView.isEnabled = false;
+        }
+    }
+    
+    // Flip the arrow direction...
     element = document.getElementById("pip_lower_right_btn");
     var elements = element.getElementsByTagName("i");
     elements[0].innerHTML = (isOn) ? "&#xE5CC;" : "&#xE5CB;";
+};
+
+LBMyApp.prototype.toggleFullScreen = function(container) {
+    var isFullScreen = LBUI3d.App3D.prototype.toggleFullScreen.call(this, container);
+    var element = document.getElementById('menu_full_screen');
+    var elements = element.getElementsByTagName('i');
+    elements[0].innerHTML = (isFullScreen) ? "&#xE5D1;" : "&#xE5D0;";
+};
+
+LBMyApp.prototype.nextMouseMode = function() {
+    var mouseMode = LBUI3d.App3D.prototype.nextMouseMode.call(this);
     
-}
-
-function onRudderChange(value) {
-}
-
-function onThrottleChange(value) {
-}
-
-function onJibsheetChange(value) {
+    var cursor;
+    var innerHTML;
+    switch (mouseMode) {
+        case LBUI3d.View3D.MOUSE_PAN_MODE :
+            innerHTML = "&#xE89F;";
+            cursor = "default";
+            break;
+            
+        case LBUI3d.View3D.MOUSE_ROTATE_MODE :
+            innerHTML = "&#xE84D;";
+            cursor = "move";
+            break;
+            
+        default :
+            return;
+    }
     
-}
-
-function onMainsheetChange(value) {
+    var element = document.getElementById('menu_mouse_mode');
+    var elements = element.getElementsByTagName('i');
+    elements[0].innerHTML = innerHTML;
     
-}
+    this.views.forEach(function(view) {
+        view.container.style.cursor = cursor;
+    });
+};
+
+LBMyApp.prototype.onRudderChange = function(value) {
+};
+
+LBMyApp.prototype.onThrottleChange = function(value) {
+};
+
+LBMyApp.prototype.onJibsheetChange = function(value) {
+    
+};
+
+LBMyApp.prototype.onMainsheetChange = function(value) {
+   
+};
 
 
-init();
-animate();
+var myApp = new LBMyApp();
+myApp.start(document.getElementById('main_view'));
