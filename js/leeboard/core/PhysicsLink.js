@@ -15,41 +15,34 @@
  */
 
 
-/* global LBUtil, Phaser, LBPhysics, LBGeometry, LBMath, LBPhaser */
+define(['lbphysics'],
+function(LBPhysics) {
+    
 
 /**
- * Base class that manages linking a {@link LBPhysics.RigidBody} to a physics engine
- * for use with Phaser.
- * <p>
- * This also supports the display of force arrows (via {@link LBPhaser.Arrow} objects)
- * and updating sprites from their associated rigid bodies.
+ * Base class that manages linking a {@link LBPhysics.RigidBody} to a physics engine.
  * @constructor
- * @param {LBPhaser.Env} phaserEnv The Phaser environment we're running under.
- * @returns {LBPhaser.PhysicsLink}
+ * @returns {LBPhysics.PhysicsLink}
  */
-LBPhaser.PhysicsLink = function(phaserEnv) {
-    this.phaserEnv = phaserEnv;
-    this.game = phaserEnv.game;
-    
+LBPhysics.PhysicsLink = function() {    
     this.rigidBodies = [];
     
     this.views = [];
     
     this.updateCount = 0;
-    this.stageUpdateCount = 0;
     
     /**
-     * The next id to be assigned to a rigid body passed to {@link LBPhaser.PhysicsLink#getRigidBodyId}.
+     * The next id to be assigned to a rigid body passed to {@link LBPhysics.PhysicsLink#getRigidBodyId}.
      * @private
      */
     this._nextRigidBodyId = 1;
 };
 
-LBPhaser.PhysicsLink.prototype = {
+LBPhysics.PhysicsLink.prototype = {
     
     /**
      * Retrieves an id that can be used to uniquely identify a rigid body within
-     * the Phaser physics stuff.
+     * the physics stuff.
      * @param {LBPhysics.RigidBody} rigidBody   The rigid body of interest.
      * @returns {Number}    The id for the rigid body.
      */
@@ -63,11 +56,12 @@ LBPhaser.PhysicsLink.prototype = {
     },
 
     /**
-     * Adds a fixed object to the physics link.
-     * @param {Object} object   A Phaser drawing object.
+     * Adds a top-level {@link LBPhysics.RigidBody} to the manager as a fixed object.
+     * This rigid body should not be a part of any other rigid body.
+     * @param {LBPhysics.RigidBody} rigidBody The rigid body.
      * @returns {LBPhaser.P2Link}   this.
      */
-    addFixedObject: function(object) {
+    addFixedObject: function(rigidBody) {
         throw 'addFixedObject not implemented';
     },
     
@@ -76,8 +70,8 @@ LBPhaser.PhysicsLink.prototype = {
      * should not be a part of any other rigid body.
      * @param {LBPhysics.RigidBody} rigidBody The rigid body.
      * @param {Object}  [data]  Optional data containing additional information for
-     * loading other items associated with the rigid body, such as a Phaser display object.
-     * @returns {LBPhaser.PhysicsLink}   this.
+     * loading other items associated with the rigid body.
+     * @returns {LBPhysics.PhysicsLink}   this.
      */
     addRigidBody: function(rigidBody, data) {
         this.rigidBodies.push(rigidBody);
@@ -92,8 +86,8 @@ LBPhaser.PhysicsLink.prototype = {
     },
     
     /**
-     * Called from {@link LBPhaser.PhysicsLink#addRigidBody} after the rigid body
-     * has been added but before the views have been notified.
+     * Called from {@link LBPhysics.PhysicsLink#addRigidBody} after the rigid body
+     * has been added.
      * @protected
      * @param {LBPhysics.RigidBody} rigidBody   The rigid body.
      * @param {Object}  [data]  Optional data containing additional information for
@@ -126,7 +120,7 @@ LBPhaser.PhysicsLink.prototype = {
     },
     
     /**
-     * Called from {@link LBPhaser.PhysicsLink#removeRigidBody} right before the rigid
+     * Called from {@link LBPhysics.PhysicsLink#removeRigidBody} right before the rigid
      * body is removed from the rigid body list, this does nothing.
      * @protected
      * @param {LBPhysics.RigidBody} rigidBody   The rigid body being removed.
@@ -137,8 +131,11 @@ LBPhaser.PhysicsLink.prototype = {
     
     
     /**
-     * Adds a {@link LBPhaser.PhysicsView} to the manager.
-     * @param {LBPhaser.PhysicsView} view The view to add.
+     * Adds a view to the manager. Views should have the following methods:
+     *  beginDisplayObjectsUpdate();
+     *  endDisplayObjectsUpdate();
+     *  updateRigidBodyDisplayObjects();
+     * @param {Object} view The view to add.
      */
     addView: function(view) {
         this.views.push(view);
@@ -153,7 +150,7 @@ LBPhaser.PhysicsLink.prototype = {
     
     /**
      * Removes a view from the manager.
-     * @param {LBPhaser.PhysicsView} view   The view to remove.
+     * @param {Object} view   The view to remove.
      * @return {Boolean}    true if the view was removed, false if it was not part
      * of this link.
      */
@@ -180,17 +177,16 @@ LBPhaser.PhysicsLink.prototype = {
 
     /**
      * Performs an update cycle.
-     * @param {Number} dt The time step, normally what was returned by {@link LBPhaser.P2Link#timeStep}..
+     * @param {Number} dt The time step.
      * @returns {undefined}
      */
     update: function(dt) {
     },
     
     /**
-     * Updates any Phaser display object that have been attached to any of the rigid bodies or their
-     * parts.
+     * Updates any display objects associated with the physics link by calling
+     * the views that were added to the link..
      * <p>
-     * This is automatically called from {@link LBPhaser.PhysicsLink#_stageUpdateTransform}.
      * @returns {undefined}
      */
     updateDisplayObjects: function() {
@@ -211,8 +207,9 @@ LBPhaser.PhysicsLink.prototype = {
         });
     },
     
-    constructor: LBPhaser.PhysicsLink
+    constructor: LBPhysics.PhysicsLink
 };
 
 
-
+return LBPhysics;
+});

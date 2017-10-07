@@ -14,7 +14,9 @@
  * limitations under the License.
  */
     
-/* global Leeboard, LBUtil */
+define(['lbutil'],
+function(LBUtil) {
+    
 
 /**
  * 
@@ -100,6 +102,19 @@ LBMath.cleanNearZero = function(x, tolerance) {
  */
 LBMath.clamp = function(val, limitA, limitB) {
     return (limitA < limitB) ? Math.min(Math.max(val, limitA), limitB) : Math.min(Math.max(val, limitB), limitA);
+};
+
+/**
+ * Maps a value within a range so it has the same relative position to a new range.
+ * @param {Number} val  The value to be mapped.
+ * @param {Number} lowerOld The value in the old range corresponding to lowerNew.
+ * @param {Number} upperOld The value in the old range corresponding to upperNew.
+ * @param {Number} lowerNew One point in the upper range.
+ * @param {Number} upperNew Another point in the upper range.
+ * @returns {Number}    The mapped value.
+ */
+LBMath.mapInRange = function(val, lowerOld, upperOld, lowerNew, upperNew) {
+    return (val - lowerOld) * (upperNew - lowerNew) / (upperOld - lowerOld) + lowerNew;
 };
 
 /**
@@ -437,3 +452,6 @@ LBMath.finiteDiffBackFirst = function(dt, f0, fm1, fm2, fm3, fm4) {
  * @type Number
  */
 LBMath.finiteDiffBackFirst.MAX_TERMS = 5;
+
+return LBMath;
+});

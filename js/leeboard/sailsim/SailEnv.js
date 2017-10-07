@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-/* global LBUtil, Phaser, LBGeometry, LBFoils, LBSailSim, LBMath */
-
-/**
- * 
- * @namespace LBSailSim
- */
+define(['lbutil', 'lbmath', 'lbgeometry', 'lbphysics', 'lbfoils', 'lbsailsimbase', 'lbassets', 'lbvessel'], 
+function(LBUtil, LBMath, LBGeometry, LBPhysics, LBFoils, LBSailSim, LBAssets) {
+    
 
 /**
  * The main sailing environment, basically the sailing world.
  * @class SailEnv
+ * @param {LBAssets.Loader} [assetLoader]   The optional asset loader.
  * @constructor
  * @returns {LBSailSim.Env}
  */
-LBSailSim.Env = function() {
+LBSailSim.Env = function(assetLoader) {
+    this.assetLoader = assetLoader || new LBAssets.Loader();
+    
     this.wind = new LBSailSim.Wind();
     this.water = new LBSailSim.Water();
     
@@ -66,6 +66,13 @@ LBSailSim.Env = function() {
      * @member {Array}
      */
     this.boatCallbacks = [];
+    
+    
+    this.loadCoordinator = new LBAssets.MultiLoadCoordinator();
+    
+    this.floatingObjectDefs = {};
+    this.floatingObjects = [];
+    this.floatingObjectsByClassification = {};
 };
 
 LBSailSim.Env.prototype = {
@@ -100,6 +107,157 @@ LBSailSim.Env.prototype = {
     calcWaterRe: function(vel, len) {
         return this.water.calcRe(vel, len);
     },
+    
+    
+    /**
+     * Resets the environment to be empty. {@link LBSailSim.SailEnv#loadEnv} will have to
+     * be called again.
+     */
+    clearEnv: function() {
+        this.returnAllBoats();
+        
+        this.clCdCurves.length = 0;
+        this.boatDatas = {};
+        this.boatsByType = {};
+        
+        this.floatingObjectDefs = {};
+        this.floatingObjects.length = 0;
+        this.floatingObjectsByClassification = {};
+    },
+    
+    /**
+     * Loads the environment from a JSON data file. The loading is asynchronous.
+     * @param {String} name The plain name of the data file, it should not have a path nor
+     * an extension. The file must be located in the data/env/ folder.
+     * @param {Function} [onLoaded] Optional function called when loading is complete.
+     * @param {Function} [onError] Optional function called on load failures.
+     */
+    loadEnv: function(name, onLoaded, onError) {
+        var me = this;
+        var fileName = 'data/env/' + name + '.json';
+        this.assetLoader.loadJSON(name, fileName, function(data) {
+            me._loadEnvFromData(data, onLoaded, onError);
+        });
+    },
+    
+    _loadEnvFromData: function(data, onLoaded, onError) {
+        var me = this;
+        this.loadCoordinator.setup(onLoaded, onError);
+        this.loadCoordinator.beginLoadCalls();
+            
+        this.assetLoader.loadJSON(data.boatList, data.boatList, 
+            this.loadCoordinator.getOnLoadFunction(function(data) {
+                me.loadBoatDatas(data);
+            }),
+            this.loadCoordinator.getOnProgressFunction(),
+            this.loadCoordinator.getOnErrorFunction());
+                
+        this.assetLoader.loadJSON(data.clCdCurves, data.clCdCurves, 
+            this.loadCoordinator.getOnLoadFunction(function(data) {
+                me.loadClCdCurves(data);
+            }),
+            this.loadCoordinator.getOnProgressFunction(),
+            this.loadCoordinator.getOnErrorFunction());
+        
+        if (data.boundaries) {
+            this._loadBoundaries(data.boundaries);
+        }
+        
+        if (data.floating) {
+            this._loadFloating(data.floating);
+        }
+    // Need to load the environment JSON file.
+    // When the file is loaded, need to install the scenery.
+    // The environment consists of:
+    // a) Objects (buoys, floating docks, flotsam)
+    //      Coordinates, 3D model, Volumes, constraints, additional properties (dock, ???)
+    // b) Boats available for checkout.
+    // c) clcdcurves.json
+    // d) Shallows?
+    // e) Current map?
+    // f) 
+    
+        this.loadCoordinator.endLoadCalls();
+    },
+    
+    _loadBoundaries: function(data) {
+        
+    },
+    
+    _loadFloating: function(data) {
+        if (data.objectDefs) {
+            data.objectDefs.forEach(this._loadFloatingObjectDef, this);
+        }
+        if (data.objects) {
+            data.objects.forEach(this._loadFloatingObject, this);
+        }
+    },
+    
+    _loadFloatingObjectDef: function(data) {
+        this.floatingObjectDefs[data.name] = data;
+    },
+    
+    _loadFloatingObject: function(data) {
+        // Get the object definition and load the object from it.
+        if (!data.def) {
+            console.error("Could not load the floating object '" + data.name + "', data.def was not defined.");
+            return;
+        }
+        
+        var objectDef = this.floatingObjectDefs[data.def];
+        if (!objectDef) {
+            console.error("Could not load the floating object '" + data.name + "', the data definition '" + data.def + "' was not defined.");
+            return;
+        }
+        
+        var rigidBody = LBPhysics.RigidBody.createFromData(objectDef);        
+        this.floatingObjects.push(rigidBody);
+
+        if (data.pos) {
+            LBGeometry.loadVector3(data.pos, rigidBody.obj3D.position);
+        }
+        
+        rigidBody.obj3D.updateMatrixWorld(true);
+        rigidBody.classification = data.classification || "";
+        
+        var classifiedObjects = this.floatingObjectsByClassification[rigidBody.classification];
+        if (!classifiedObjects) {
+            classifiedObjects = [];
+            this.floatingObjectsByClassification[rigidBody.classification] = classifiedObjects;
+        }
+        classifiedObjects.push(rigidBody);
+        
+        // TODO: Handle the type.
+        
+        this.floatingObjectLoaded(data, rigidBody, objectDef);
+    },
+    
+    /**
+     * Called when a floating object has been loaded to provide optional further proessing.
+     * @param {Object} data The data object used to load the floating object.
+     * @param {LBPhysics.RigidBody} rigidBody   The rigid body floating object.
+     * @param {Object} objectDef    The definition object.
+     */
+    floatingObjectLoaded: function(data, rigidBody, objectDef) {
+        
+    },
+    
+
+    //
+    // Floating object scenario:
+    // ObjectDefs are used to create the actual object instances.
+    // From an ObjectDef, we create an LBPhysics.RigidBody object.
+    // The ObjectDef is just the data definition.
+    // For a floating object, we have the reference to the object def,
+    // So on loading the floating object, we do the following:
+    //      Obtain the ObjectDef.
+    //      Create the RigidBody object from the object def.
+    //      [ThreeJS] From the object def data, also load the 3D JSON Model via Scene3D.
+    //          Async, so callback will associate the model with the rigid body.
+    //          Model is added to the scene via Scene3D.
+    //      [Phaser] From the object def data, also load the Phaser sprite.
+    //      Add the rigid body object to the physics link.
+    //
     
     /**
      * Loads {@link LBFoils.ClCdCurve} from a data object.
@@ -354,6 +512,21 @@ LBSailSim.Env.prototype = {
     },
     
     /**
+     * Returns all the boats that have been checked out.
+     * @return {LBSailSim.SailEnv} this.
+     */
+    returnAllBoats: function() {
+        var me = this;
+        Object.values(this.boatsByType).forEach(function(boatsOfType) {
+           Object.values(boatsOfType).forEach(function(boat) {
+               me.returnBoat(boat);
+           });
+        });
+        
+        return this;
+    },
+    
+    /**
      * Call after physics have been updated to handle any pre-rendering updates.
      * @returns {object} this.
      */
@@ -423,6 +596,20 @@ LBSailSim.Wind.BEAUFORT_UPPER_BOUNDARY_KTS = [
 ];
 
 LBSailSim.Wind.MAX_BEAUFORT_FORCE = 12;
+
+/**
+ * Converts a wind speed in knots to Beaufort force.
+ * @param {Number} knots    The speed in knots.
+ * @returns {Number}    The Beaufort force number.
+ */
+LBSailSim.Wind.getForceForKnots = function(knots) {
+    for (var i = 0; i < LBSailSim.Wind.MAX_BEAUFORT_FORCE; ++i) {
+        if (knots < LBSailSim.Wind.BEAUFORT_UPPER_BOUNDARY_KTS[i]) {
+            return i;
+        }
+    }
+    return i;
+};
 
 LBSailSim.Wind.prototype = {
     constructor: LBSailSim.Wind,
@@ -590,3 +777,6 @@ LBSailSim.getFlowVelocity = function(flow, pos, vel) {
     var z = pos.z || 0;
     return flow.getFlowVelocity(pos.x, pos.y, z, vel);
 };
+
+return LBSailSim;
+});

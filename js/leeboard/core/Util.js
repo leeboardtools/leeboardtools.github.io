@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+define(function() {
+    
 /**
  * @namespace LBUtil
  */
@@ -166,15 +168,40 @@ LBUtil.copyAndMirrorArray = function(array) {
 
 
 /**
- * Retrieves the function in the global scope with a given name.
+ * Registers an object as a namespace with LBUtil so it can be accessed by {@link LBUtil.stringToFunction}
+ * and {@link LBUtil.newClassInstanceFromData}.
+ * @param {String} name The namespace name.
+ * @param {Object} namespace    The object representing the namespace.
+ * @returns {LBUtil}    LBUtil.
+ */
+LBUtil.registerNamespace = function(name, namespace) {
+    LBUtil.registeredNamespaces = LBUtil.registeredNamespaces || {};
+    LBUtil.registeredNamespaces[name] = namespace;
+    return LBUtil;
+};
+
+
+/**
+ * Retrieves the function that is either in a registered namespace or in the 
+ * global scope with a given name.
  * @param {String} str  The name of the function.
  * @returns {function}  The function object.
  * @throws {Error} An error is throw if str could not be resolved to a function object.
  */
 LBUtil.stringToFunction = function(str) {
     var arr = str.split(".");
-    var fn = window || this;
-    for (var i = 0, len = arr.length; i < len; i++) {
+    var fn;
+    var i = 0;
+    if (LBUtil.registeredNamespaces) {
+        fn = LBUtil.registeredNamespaces[arr[0]];
+    }
+    if (!fn) {
+        fn = window || this;
+    }
+    else {
+        ++i;
+    }
+    for (var len = arr.length; i < len; i++) {
         fn = fn[arr[i]];
     }
     if (typeof fn !== 'function') {
@@ -362,6 +389,11 @@ LBUtil.RollingBuffer.prototype = {
     constructor: LBUtil.RollingBuffer
 };
 
+/**
+ * Helper for toggling full-screen mode.
+ * @param {Object} element  The DOM element to use.
+ * @returns {Boolean}   true if full screen mode is entered.
+ */
 LBUtil.toggleFullScreen = function(element) {
     var fullscreenEnabled;
     var fullscreenElement;
@@ -406,3 +438,6 @@ LBUtil.toggleFullScreen = function(element) {
         return true;
     }
 };
+
+return LBUtil;
+});

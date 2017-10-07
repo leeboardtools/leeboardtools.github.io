@@ -15,13 +15,13 @@
  */
 
 
-/* global Phaser */
-/* global LBUtil, LBSailSim, LBGeometry, LBMath, LBPhaser, LBFoils, LBDebug */
+require( ['phaser', 'lbutil', 'lbsailsim', 'lbgeometry', 'lbvolume', 'lbphysics', 'lbmath', 'lbphaser', 'lbfoils', 'lbdebug', 'lbsailsimphaserview', 'lbsailsimphaser'],
+    function(Phaser, LBUtil, LBSailSim, LBGeometry, LBVolume, LBPhysics, LBMath, LBPhaser, LBFoils, LBDebug) {
 
 
 //
 //--------------------------------------------------
-LoadingState = {};
+var LoadingState = {};
 
 //
 //--------------------------------------------------
@@ -60,7 +60,7 @@ LoadingState.create = function() {
 
 
 //--------------------------------------------------
-PlayState = {};
+var PlayState = {};
 
 PlayState.settings = {
     startSingleStep: false,
@@ -263,18 +263,6 @@ PlayState.create = function() {
     
     this.camera.focusOnXY(0, 0);
     
-    var clCdCurvesJSON = this.game.cache.getJSON('clCdCurves');
-    this.sailEnv.loadClCdCurves(clCdCurvesJSON);
-    
-    var boatsJSON = this.game.cache.getJSON('boats');
-    this.sailEnv.loadBoatDatas(boatsJSON);
-    
-    var basicJSON = this.game.cache.getJSON('basic');
-    this._loadLevel(basicJSON);
-};
-
-//--------------------------------------------------
-PlayState._loadLevel = function (data) {
     // The background...
     this.bkgdWater = this.game.add.group();
     var maxSize = Math.sqrt(this.game.width * this.game.width + this.game.height * this.game.height);
@@ -285,30 +273,30 @@ PlayState._loadLevel = function (data) {
     this.water.anchor.y = 0.5;
     this.bkgdWater.add(this.water);
  
-    // Need wind ripples...
-    
     // The worldGroup effectively lets us scroll the world...
     this.worldGroup = this.game.add.group();
     
-    this.buoys = this.game.add.group(this.worldGroup);    
-    data.buoys.forEach(this._spawnBuoys, this);
-
+    this.buoys = this.game.add.group(this.worldGroup);
+    this.sailEnv.floatingObjectsGroup = this.buoys;
+    
     this.sailSimView = new PlayState.settings.sailSimViewConstructor(this.sailEnv, this.worldGroup);
     
+    var me = this;
+    this.sailEnv.loadEnv('basin', function() {
+        var basicJSON = me.game.cache.getJSON('basic');
+        me._loadLevel(basicJSON);
+   });
+};
+
+//--------------------------------------------------
+PlayState._loadLevel = function (data) {
+    // Need wind ripples...
     this._spawnCharacters({myBoat: data.myBoat });
     
     this.appWindArrow = new LBPhaser.Arrow(this.sailEnv.phaserEnv, this.worldGroup, this.sailSimView.appWindVelocityArrowStyle);
     this.boatVelocityArrow = new LBPhaser.Arrow(this.sailEnv.phaserEnv, this.worldGroup, this.sailSimView.boatVelocityArrowStyle);
     
     this._setupHUD();
-};
-
-//--------------------------------------------------
-PlayState._spawnBuoys = function(data) {
-    var x = this.sailEnv.phaserEnv.toPixelsX(data.x);
-    var y = this.sailEnv.phaserEnv.toPixelsY(data.y);
-    var buoy = this.buoys.create(x, y, data.image);
-    this.sailEnv.physicsLink.addFixedObject(buoy);
 };
 
 //--------------------------------------------------
@@ -524,6 +512,10 @@ PlayState.preRender = function() {
 //
 //--------------------------------------------------
 PlayState.update = function() {
+    if (!this.myBoat) {
+        return;
+    }
+    
     this.sailEnv.update();
     LBDebug.DataLog.output();
     
@@ -846,7 +838,7 @@ PlayState.pxmi = function (v) {
 };
 
 //--------------------------------------------------
-window.onload = function() {
+//window.onload = function() {
     var config = {
         width: "100",
         height: "100",
@@ -858,9 +850,12 @@ window.onload = function() {
     //config.width = 800;
     //config.height = 800;
     
-    game = new Phaser.Game(config);
+    var game = new Phaser.Game(config);
 
     game.state.add('play', PlayState);
     game.state.add('loading', LoadingState);
     game.state.start('loading');
-};
+//};
+
+});
+

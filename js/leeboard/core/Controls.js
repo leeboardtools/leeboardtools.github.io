@@ -15,12 +15,15 @@
  */
 
 
-/* global LBMath, LBUtil, LBGeometry */
+define(['lbutil', 'lbmath'],
+function(LBUtil, LBMath) {
+    
 
 /**
  * @namespace LBControls
  */
 var LBControls = LBControls || {};
+LBUtil.registerNamespace('LBControls', LBControls);
 
 /**
  * A controller whose value is any value between a minimum and a maximum value.
@@ -99,6 +102,21 @@ LBControls.SmoothController.prototype = {
         }
         
         return this;
+    },
+    
+    /**
+     * Sets the value for the controller based upon a value between a lower
+     * and an upper value that are mapped to the range limits of the controller.
+     * @param {Number} value    The value.
+     * @param {Number} minValue   The value of value mapped to the controller's {@link LBControls.SmoothController#minValue}..
+     * @param {Number} maxValue   The value of value mapped to the controller's {@link LBControls.SmoothController#maxValue}..
+     * @returns {LBControls.SmoothController} this.
+     */
+    setMappedValue: function(value, minValue, maxValue) {
+        if ((minValue !== undefined) && (maxValue !== undefined) && (minValue !== maxValue)) {
+            value = LBMath.mapInRange(value, minValue, maxValue, this.minValue, this.maxValue);
+        }
+        return this.setValue(value);
     },
     
     /**
@@ -323,4 +341,5 @@ LBControls.createControllerFromData = function(data, owner) {
     return controller.load(data, owner);
 };
 
-
+return LBControls;
+});

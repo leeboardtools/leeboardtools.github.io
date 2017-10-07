@@ -15,8 +15,7 @@
  */
 
 
-/* global LBSailSim, LBUtil, LBMath, LBPhaser, LBGeometry, LBCamera */
-
+define(['lbsailsim', 'lbcannonphysicslink', 'lbphaser'], function(LBSailSim, LBCannon, LBPhaser) {
 
 /**
  * An implementation of {@link LBSailSim.Env} for use with {@link Phaser.Physics.P2} or Cannon physics.
@@ -42,11 +41,10 @@ LBSailSim.PhaserSailEnv = function(game, physicsType) {
             break;
         
         case LBSailSim.PhaserSailEnv.CANNON_PHYSICS :
-            this.physicsLink = new LBPhaser.CannonLink(this.phaserEnv);
+            this.physicsLink = new LBCannon.CannonPhysicsLink();
             break;
     }
     this.physicsType = physicsType;
-
 };
 
 /**
@@ -66,6 +64,25 @@ LBSailSim.PhaserSailEnv.CANNON_PHYSICS = 1;
 LBSailSim.PhaserSailEnv.prototype = Object.create(LBSailSim.Env.prototype);
 LBSailSim.PhaserSailEnv.prototype.constructor = LBSailSim.PhaserSailEnv;
 
+
+LBSailSim.PhaserSailEnv.prototype.floatingObjectLoaded = function(data, rigidBody, objectDef) {
+    LBSailSim.Env.prototype.floatingObjectLoaded.call(this, data, rigidBody, objectDef);
+    
+    if (objectDef && objectDef.phaserImage) {
+        if (this.floatingObjectsGroup) {
+            var x = this.phaserEnv.toPixelsX(rigidBody.obj3D.position.x);
+            var y = this.phaserEnv.toPixelsY(rigidBody.obj3D.position.y);
+            var buoy = this.floatingObjectsGroup.create(x, y, objectDef.phaserImage);
+            
+            if (this.physicsType === LBSailSim.PhaserSailEnv.P2_PHYSICS) {
+                this.physicsLink.addFixedPhaserObject(buoy);
+            }
+            else {
+                this.physicsLink.addFixedObject(rigidBody);
+            }
+        }
+    }
+};
 
 LBSailSim.PhaserSailEnv.prototype._boatCheckedOut = function(boat, data) {
     this.physicsLink.addRigidBody(boat, data);
@@ -95,3 +112,6 @@ LBSailSim.PhaserSailEnv.prototype.update = function() {
     
     this.physicsLink.update(dt);
 };
+
+return LBSailSim;
+});

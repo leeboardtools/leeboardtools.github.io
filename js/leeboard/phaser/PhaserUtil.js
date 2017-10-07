@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-/* global LBUtil, LBMath, Phaser, LBGeometry, LBCamera */
+define(['lbmath', 'lbgeometry', 'phaser'],
+function(LBMath, LBGeometry, Phaser) {
 
 /**
  * @namespace LBPhaser
@@ -431,3 +432,5 @@ LBPhaser.Arrow.prototype = {
     constructor: LBPhaser.Arrow
 };
 
+return LBPhaser;
+});
