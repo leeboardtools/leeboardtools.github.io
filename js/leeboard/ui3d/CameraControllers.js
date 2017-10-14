@@ -502,7 +502,8 @@ LBUI3d.CameraController.prototype.onMouseMove = function(event) {
     event.preventDefault();
     
     if ((this.trackingState === LBUI3d.CameraController.TRACKING_STATE_PAN)
-     || (this.trackingState === LBUI3d.CameraController.TRACKING_STATE_ROTATE)) {
+     || (this.trackingState === LBUI3d.CameraController.TRACKING_STATE_ROTATE)
+     || (this.trackingState === LBUI3d.CameraController.TRACKING_STATE_ZOOM)) {
         this.performTrack(event.clientX, event.clientY, event.timeStamp);
     }
 };
@@ -563,7 +564,7 @@ LBUI3d.CameraController.prototype.onTouchMove = function(event) {
             break;
             
         case 2 :
-            this.performTracking(touchDistance(event), 0, event.timeStamp);
+            this.performTrack(touchDistance(event), 0, event.timeStamp);
             break;
             
         case 3 :
