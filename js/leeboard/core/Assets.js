@@ -17,9 +17,11 @@
 
 define(function() {
 
+    'use strict';
+
 /**
  * 
- * @namespace LBAssets|
+ * @namespace LBAssets
  */
 var LBAssets = LBAssets || {};
 

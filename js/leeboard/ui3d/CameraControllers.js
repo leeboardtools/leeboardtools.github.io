@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-define(['lbcamera', 'lbscene3d', 'lbgeometry', 'lbmath'],
-function(LBCamera, LBUI3d, LBGeometry, LBMath) {
+define(['lbcamera', 'lbscene3d', 'lbgeometry', 'lbmath', 'lbutil', 'lbspherical'],
+function(LBCamera, LBUI3d, LBGeometry, LBMath, LBUtil, LBSpherical) {
+
+    'use strict';
 
 
 /**
@@ -24,10 +26,34 @@ function(LBCamera, LBUI3d, LBGeometry, LBMath) {
  * @returns {LBUI3d.CameraLimits}
  */
 LBUI3d.CameraLimits = function() {
+    /**
+     * The minimum allowed position.
+     * @member {LBGeometry.Vector3}
+     */
     this.minPos = new LBGeometry.Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+
+    /**
+     * The maximum allowed position.
+     * @member {LBGeometry.Vector3}
+     */
     this.maxPos = new LBGeometry.Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+    
+    /**
+     * The allowed range for azimuth degrees.
+     * @member {LBMath.DegRange}
+     */
     this.azimuthRange = new LBMath.DegRange(-180, 360);
+    
+    /**
+     * The allowed range for altitude degrees.
+     * @member {LBMath.DegRange}
+     */
     this.altitudeRange = new LBMath.DegRange(-90, 360);
+    
+    /**
+     * The allowed range for rotation degrees.
+     * @member {LBMath.DegRange}
+     */
     this.rotationRange = new LBMath.DegRange(-180, 360);
 };
 
@@ -37,9 +63,9 @@ LBUI3d.CameraLimits.prototype = {
      * srcPosition and srcOrientation are not modified unless they are the same as
      * dstPosition and dstOrientation, respectively.
      * @param {LBGeometry.Vector3} srcPosition  The position to be limited if necessary.
-     * @param {LBUI3d.SphericalOrientation} srcOrientation  The orientation to be limited if necessary.
+     * @param {LBSpherical.Orientation} srcOrientation  The orientation to be limited if necessary.
      * @param {LBGeometry.Vector3} dstPosition  Set to the position, limited if necessary.
-     * @param {LBUI3d.SphericalOrientation} dstOrientation  Set to the orientation, limited if necessary.
+     * @param {LBSpherical.Orientation} dstOrientation  Set to the orientation, limited if necessary.
      */
     applyLimits: function(srcPosition, srcOrientation, dstPosition, dstOrientation) {
         dstPosition.set(
@@ -55,120 +81,8 @@ LBUI3d.CameraLimits.prototype = {
 };
 
 
-/**
- * Defines an orientation in spherical coordinates. This is basically Euler angles in
- * the order z,y,x, expressed in degrees.
- * <p>
- * An azimuth of 0 degrees points towards the +x axis.
- * An altitude of + degrees points towards the +z axis.
- * The rotation angle is around the azimuth/altitude axis
- * @constructor
- * @returns {CameraControllers_L18.LBUI3d.SphericalOrientation}
- */
-LBUI3d.SphericalOrientation = function() {
-    this.azimuthDeg = 0;
-    this.altitudeDeg = 0;
-    this.rotationDeg = 0;
-};
-
-LBUI3d.SphericalOrientation.prototype = {
-    /**
-     * Creates a copy of this.
-     * @returns {LBUI3d.SphericalOrientation}   The copy.
-     */
-    clone: function() {
-        var obj = new LBUI3d.SphericalOrientation();
-        return obj.copy(this);
-    },
-    
-    /**
-     * Sets this to match another orientation.
-     * @param {LBUI3d.SphericalOrientation} other   The orientation to copy.
-     * @returns {LBUI3d.SphericalOrientation}   this.
-     */
-    copy: function(other) {
-        this.azimuthDeg = other.azimuthDeg;
-        this.altitudeDeg = other.altitudeDeg;
-        this.rotationDeg = other.rotationDeg;
-        return this;
-    },
-    
-    /**
-     * Determines if this orientation and another orientation are the same.
-     * @param {LBUI3d.SphericalOrientation} other   The orientation to test against.
-     * @returns {boolean}   true if they are the same.
-     */
-    equals: function(other) {
-        return LBMath.degreesEqual(this.azimuthDeg, other.azimuthDeg)
-            && LBMath.degreesEqual(this.altitudeDeg, other.altitudeDeg)
-            && LBMath.degreesEqual(this.rotationDeg, other.rotationDeg);
-    },
-    
-    /**
-     * Calculates a point at a distance along the ray defined by the orientation.
-     * @param {Number} r    The distance.
-     * @param {LBGeometry.Vector3} [store]    If defined the object to store the point in.
-     * @returns {LBGeometry.Vector3}    The point.
-     */
-    calcLookAtPoint: function(r, store) {
-        r = r || 1;
-        store = store || new LBGeometry.Vector3();
-        
-        var theta = (90 - this.altitudeDeg) * LBMath.DEG_TO_RAD;
-        var phi = this.azimuthDeg * LBMath.DEG_TO_RAD;
-        var r_sinTheta = r * Math.sin(theta);
-        return store.set(r_sinTheta * Math.cos(phi), r_sinTheta * Math.sin(phi), r * Math.cos(theta));
-    },
-    
-    /**
-     * Calculates the {@link LBGeometry.Euler} equivalent.
-     * @param {LBGeometry.Euler} [store]    If defined the object to store into.
-     * @returns {LBGeometry.Euler}  The Euler object.
-     */
-    toEuler: function(store) {
-        return (store) ? store.set(this.rotationDeg * LBMath.DEG_TO_RAD, this.altitudeDeg * LBMath.DEG_TO_RAD, this.azimuthDeg * LBMath.DEG_TO_RAD, 'ZYX')
-            : new LBGeometry.Euler(this.rotationDeg * LBMath.DEG_TO_RAD, this.altitudeDeg * LBMath.DEG_TO_RAD, this.azimuthDeg * LBMath.DEG_TO_RAD, 'ZYX');
-    },
-    
-    /**
-     * Calculates the {@link LBGeometry.Quaternion} equivalent.
-     * @param {LBGeometry.Quaternion} [store]   If defined the object to store into.
-     * @returns {LBGeometry.Quaternion} The quaternion.
-     */
-    toQuaternion: function(store) {
-        store = store || new LBGeometry.Quaternion();
-        return store.setFromEuler(this.toEuler(_workingEuler));
-    },
-    
-    /**
-     * Calculates a {@link LBGeometry.Matrix4} rotation matrix equivalent of the orientation.
-     * @param {LBGeometry.Matrix4} [store]  If defined the object to store into.
-     * @returns {LBGeometry.Matrix4}    The rotation matrix.
-     */
-    toMatrix4: function(store) {
-        store = store || new LBGeometry.Matrix4();
-        return store.makeRotationFromEuler(this.toEuler(_workingEuler));
-    },
-    
-    constructor: LBUI3d.SpericalOrientation
-};
-
-/**
- * Creates a copy or a clone of an {@link LBUI3d.SphericalOrientation}, depending
- * upon whether or not the destination exists.
- * @param {LBUI3d.SphericalOrientation} dst If defined, the destination object to be
- * copied into, otherwise a new object is created.
- * @param {LBUI3d.SphericalOrientation} src The object to be copied or cloned.
- * @returns {LBUI3d.SphericalOrientation}   A copy or clone of src.
- */
-LBUI3d.SphericalOrientation.copyOrClone = function(dst, src) {
-    return (dst) ? dst.copy(src) : src.clone();
-};
-
-
 var _workingPosition = new LBGeometry.Vector3();
-var _workingOrientation = new LBUI3d.SphericalOrientation();
-var _workingEuler = new LBGeometry.Euler();
+var _workingOrientation = new LBSpherical.Orientation();
 var _workingVector3 = new LBGeometry.Vector3();
 var _workingMatrix4 = new LBGeometry.Matrix4();
 
@@ -188,24 +102,64 @@ var _workingMatrix4 = new LBGeometry.Matrix4();
  * @returns {LBUI3d.CameraController}
  */
 LBUI3d.CameraController = function(worldLimits, localLimits) {
+    /**
+     * The world limits applied to the camera position.
+     * @member {LBUI3d.CameraLimits}
+     */
     this.worldLimits = worldLimits || new LBUI3d.CameraLimits();
+
+    /**
+     * The local limits applied to the camera position.
+     * @member {LBUI3d.CameraLimits}
+     */
     this.localLimits = localLimits || new LBUI3d.CameraLimits();
     
+    /**
+     * The current camera position in world coordinates.
+     * @member {LBGeometry.Vector3}
+     */
     this.currentPosition = new LBGeometry.Vector3();
+    
+    /**
+     * The current camera orientation in world coordinates.
+     * @member {LBGeometry.Quaternion}
+     */
     this.currentQuaternion = new LBGeometry.Quaternion();
-    this.destPosition = new LBGeometry.Vector3();
-    this.destQuaternion = new LBGeometry.Quaternion();
     
-    this.maxLinearAccel = 10;
-    this.maxAngularAccel = 10;
-    
+    /**
+     * The current mouse mode.
+     * @member {LBUI3d.CameraController.MOUSE_PAN_MODE|LBUI3d.CameraController.MOUSE_ROTATE_MODE}
+     */
     this.mouseMode = -1;
     
+    /**
+     * Enables tracked zooming if true.
+     * @member {Boolean}
+     */
     this.zoomEnabled = true;
+    
+    /**
+     * The current camera zoom scale.
+     * @member {Number}
+     */
     this.zoomScale = 1;
+    
+    /**
+     * The minimum camera zoom scale.
+     * @member {Number}
+     */
     this.minZoomScale = 0.025;
+    
+    /**
+     * The maximum camera zoom scale.
+     * @member {Number}
+     */
     this.maxZoomScale = 150;
     
+    /**
+     * The current tracking state.
+     * @member {LBUI3d.CameraController.TRACKING_STATE_IDLE|LBUI3d.CameraController.TRACKING_STATE_PAN|LBUI3d.CameraController.TRACKING_STATE_ROTATE|LBUI3d.CameraController.TRACKING_STATE_ZOOM}
+     */
     this.trackingState = LBUI3d.CameraController.TRACKING_STATE_IDLE;
 };
 
@@ -416,7 +370,7 @@ LBUI3d.CameraController.prototype.startTracking = function(x, y, timeStamp, trac
 LBUI3d.CameraController.prototype.performTrack = function(x, y, timeStamp) {
     this.deltaX = x - this.lastX;
     this.deltaY = y - this.lastY;
-    this.deltaT = timeStamp - this.lastT;
+    this.deltaT = (timeStamp - this.lastT) / 1000;
 
     switch (this.trackingState) {
         case LBUI3d.CameraController.TRACKING_STATE_PAN :
@@ -741,21 +695,18 @@ LBUI3d.CameraController.prototype.calcScreenDistance = function() {
     return 0;
 };
 
+
 /**
- * Requests the camera be positioned with a given location and orientation in the local
- * coordinates of the target object.
- * @protected
- * @param {LBGeometry.Vector3} position The requested position.
- * @param {LBUI3d.SphericalOrientation} sphericalOrientation    The requested spherical orientation.
+ * Converts a camera position and spherical orientation in target local coordinates to
+ * a world position and quaternion.
+ * @param {LBGeometry.Vector3} localPos The local position.
+ * @param {LBSpherical.Orientation} localOrientation    The local spherical orientation.
+ * @param {LBGeometry.Vector3} worldPos Set to the world position.
+ * @param {LBGeometry.Quaternion} worldQuaternion   Set to the quaternion representing the orientation in world coordinates.
+ * @returns {undefined}
  */
-LBUI3d.CameraController.prototype.requestLocalCameraPOV = function(position, sphericalOrientation) {
-    // TODO:
-    // Need to think about this a bit more.
-    // For a local POV, we need to update the local destination, and then convert that
-    // to the world POV.
-    // For a world POV, we need to update the world destination directly.
-    
-    this.localLimits.applyLimits(position, sphericalOrientation, _workingPosition, _workingOrientation);
+LBUI3d.CameraController.prototype.localPosOrientationToWorldPosQuaternion = function(localPos, localOrientation, worldPos, worldQuaternion) {
+    this.localLimits.applyLimits(localPos, localOrientation, _workingPosition, _workingOrientation);
     
     var mat = _workingOrientation.toMatrix4(_workingMatrix4);
     LBUI3d.CameraController.adjustMatForCameraAxis(mat);
@@ -766,30 +717,21 @@ LBUI3d.CameraController.prototype.requestLocalCameraPOV = function(position, sph
         mat.premultiply(this.target.matrixWorld);
     }
     
-    mat.decompose(this.destPosition, this.destQuaternion, _workingVector3);
+    mat.decompose(worldPos, worldQuaternion, _workingVector3);
 };
 
-LBUI3d.CameraController.prototype.requestWorldCameraPOV = function(dir, up) {
-};
 
 /**
  * This is normally called from the {@link LBUI3d.View3d#render} method to handle tracking
  * and updating the camera position.
  * @param {Number}  dt  The time step in milliseconds.
- * @param {Boolean} updateCamera    If true the camera should be updated, otherwise it
+ * @param {Boolean} updateCamera    If true the camera should be updated, otherwise it 
  * is just background tracking.
  * @returns {undefined}
  */
 LBUI3d.CameraController.prototype.update = function(dt, updateCamera) {
-    this.updateDestination(dt);
-    
-    if (!this.currentPosition.equals(this.destPosition)) {
-        this.currentPosition.copy(this.destPosition);
-    }
-    if (!this.currentQuaternion.equals(this.destQuaternion)) {
-        this.currentQuaternion.copy(this.destQuaternion);
-    }
-    
+    this.updateCameraPosition(dt, this.currentPosition, this.currentQuaternion);
+
     if (updateCamera) {
         var coordMapping = (this.view && this.view.scene3D) ? this.view.scene3D.coordMapping : LBUI3d.DirectCoordMapping;
         coordMapping.vector3ToThreeJS(this.currentPosition, this.camera.position);
@@ -799,12 +741,14 @@ LBUI3d.CameraController.prototype.update = function(dt, updateCamera) {
 
 
 /**
- * Called by {@link LBUI3d.CameraController#update} to update the desired camera destination.
+ * Called by {@link LBUI3d.CameraController#update} to update the current camera position
  * @protected
  * @param {Number}  dt  The time step in milliseconds.
+ * @param {LBGeometry.Vector3} position The camera world coordinates position to be updated.
+ * @param {LBGeometry.Quaternion} quaternion    The camera world coordinates quaternion to be update.
  * @returns {undefined}
  */
-LBUI3d.CameraController.prototype.updateDestination = function(dt) {
+LBUI3d.CameraController.prototype.updateCameraPosition = function(dt, position, quaternion) {
     
 };
 
@@ -820,22 +764,165 @@ LBUI3d.CameraController.prototype.updateDestination = function(dt) {
 LBUI3d.LocalPOVCameraController = function(localLimits) {
     LBUI3d.CameraController.call(this, null, localLimits);
     
+    /**
+     * The current local camera position.
+     * @member {LBGeometry.Vector3}
+     */
     this.localPosition = new LBGeometry.Vector3();
-    this.localOrientation = new LBUI3d.SphericalOrientation();
     
+    /**
+     * The current camera spherical orientation.
+     * @member {LBSpherical.Orientation}
+     */
+    this.localOrientation = new LBSpherical.Orientation();
+    
+    /**
+     * This is used to determine the azimuth of the forward direction for the standard views.
+     * @member {Number}
+     */
     this.forwardAzimuthDeg = 0;
     
-    this.deceleration = 1;
+    /**
+     * The deceleration value to use for position, when decelerating after a mouse up
+     * with position velocity. In position units/second^2.
+     * @member {Number}
+     */
+    this.positionDecel = 1;
+    
+    /**
+     * The deceleration value to use for orientation degrees, when decelerating after a mouse up
+     * with orientation velocity. In degrees/second^2.
+     * @member {Number}
+     */
+    this.degDecel = 1800;
+    
+    /**
+     * The maximum number of seconds to allow for decelerating after a mouse up with position
+     * or orientation velocity.
+     * @member {Number}
+     */
+    this.maxTransitionTime = 5;
+    
+    /**
+     * The current transition time in seconds when decelerating after a mouse up with position or orientation
+     * velocity. 0 if not decelerating.
+     */
+    this.currentTransitionTime = 0;
 };
 
 LBUI3d.LocalPOVCameraController.prototype = Object.create(LBUI3d.CameraController.prototype);
 LBUI3d.LocalPOVCameraController.prototype.constructor = LBUI3d.LocalPOVCameraController;
 
-LBUI3d.LocalPOVCameraController.prototype.updateDestination = function(dt) {
+/**
+ * Updates a velocity value for decelerating to zero velocity.
+ * @param {Number} dt   The time step.
+ * @param {Number} vel  The velocity to decelerate towards zero.
+ * @param {Number} decel    The deceleration rate, must be &geq; 0.
+ * @returns {Number}    The updated velocity.
+ */
+function decelVelTowardsZero(dt, vel, decel) {
+    if (vel > 0) {
+        vel -= dt * decel;
+        return Math.max(vel, 0);
+    }
+    else if (vel < 0) {
+        vel += dt * decel;
+        return Math.min(vel, 0);
+    }
+    return vel;
+};
+
+/**
+ * Calculates the time to decelerate a velocity to zero given the deceleration rate.
+ * @param {Number} vel  The velocity.
+ * @param {Number} decel    The deceleration, the sign is ignored.
+ * @returns {Number}    The time required to decelerate vel to 0.
+ */
+function calcDecelTimeToZero(vel, decel) {
+    // dV / dT = a
+    return Math.abs(vel / decel);
+};
+
+/**
+ * Calculates the deceleration rate for decelerating a velocity to zero over a given time.
+ * @param {Number} vel  The velocity.
+ * @param {Number} time The time.
+ * @returns {Number}    The absolute value of the deceleration.
+ */
+function calcDecelRateForTime(vel, time) {
+    // dV / dT = a
+    return Math.abs(vel / time);
+};
+
+LBUI3d.LocalPOVCameraController.prototype.updateCameraPosition = function(dt, position, quaternion) {
     if (this.target) {
-        this.requestLocalCameraPOV(this.localPosition, this.localOrientation);
+        if (this.currentTransitionTime > 0) {
+            dt = Math.min(dt, this.currentTransitionTime);
+            this.currentTransitionTime -= dt;
+            
+            this.localPosition.x += this.localPositionVel.x * dt;
+            this.localPosition.y += this.localPositionVel.y * dt;
+            this.localPositionVel.x = decelVelTowardsZero(dt, this.localPositionVel.x, this.localPositionDecel.x);
+            this.localPositionVel.y = decelVelTowardsZero(dt, this.localPositionVel.y, this.localPositionDecel.y);
+            
+            // Probably want to convert this to quaternion based...
+            this.localOrientation.altitudeDeg += this.localOrientationVel.altitudeDeg * dt;
+            this.localOrientation.azimuthDeg += this.localOrientationVel.azimuthDeg * dt;
+            
+            this.localOrientationVel.altitudeDeg = decelVelTowardsZero(dt, this.localOrientationVel.altitudeDeg, 
+                this.localOrientationDecel.altitudeDeg);
+            this.localOrientationVel.azimuthDeg = decelVelTowardsZero(dt, this.localOrientationVel.azimuthDeg, 
+                this.localOrientationDecel.azimuthDeg);
+        }
+        
+        this.localPosOrientationToWorldPosQuaternion(this.localPosition, this.localOrientation, position, quaternion);
     }
 };
+
+/**
+ * Sets the point of view of the camera to a specific position and spherical orientation.
+ * @param {LBGeometry.Vector3} position The local position.
+ * @param {LBSpherical.Orientation} sphericalOrientation    The spherical orientation.
+ * @returns {undefined}
+ */
+LBUI3d.LocalPOVCameraController.prototype.setLocalCameraPOV = function(position, sphericalOrientation) {
+    this.localPosition.copy(position);
+    this.localOrientation.copy(sphericalOrientation);
+};
+
+/**
+ * Requests the point of view of the camera be decelerated to 0 velocity given an initial velocity.
+ * @param {LBGeometry.Vector3} positionVel The local position velocity.
+ * @param {LBSpherical.Orientation} orientationVel    The spherical orientation velocity.
+ * @returns {undefined}
+ */
+LBUI3d.LocalPOVCameraController.prototype.requestLocalCameraPOVDeceleration = function(positionVel, orientationVel) {
+    // Figure out the longest time to decel to zero.
+    // Then figure out the deceleration rates to take that time to zero.
+    var dt = calcDecelTimeToZero(positionVel.x, this.positionDecel);
+    dt = Math.max(dt, calcDecelTimeToZero(positionVel.y, this.positionDecel));
+    dt = Math.max(dt, calcDecelTimeToZero(orientationVel.azimuthDeg, this.degDecel));
+    dt = Math.max(dt, calcDecelTimeToZero(orientationVel.altitudeDeg, this.degDecel));
+    dt = Math.min(dt, this.maxTransitionTime);
+    
+    if (LBMath.isLikeZero(dt)) {
+        this.currentTransitionTime = 0;
+        return;
+    }
+    
+    this.currentTransitionTime = dt;
+    this.localPositionVel = LBUtil.copyOrClone(this.localPositionVel, positionVel);
+    this.localOrientationVel = LBUtil.copyOrClone(this.localOrientationVel, orientationVel);
+    
+    this.localPositionDecel = this.localPositionDecel || new LBGeometry.Vector3();
+    this.localPositionDecel.x = calcDecelRateForTime(positionVel.x, dt);
+    this.localPositionDecel.y = calcDecelRateForTime(positionVel.y, dt);
+    
+    this.localOrientationDecel = this.localOrientationDecel || new LBSpherical.Orientation();
+    this.localOrientationDecel.azimuthDeg = calcDecelRateForTime(orientationVel.azimuthDeg, dt);
+    this.localOrientationDecel.altitudeDeg = calcDecelRateForTime(orientationVel.altitudeDeg, dt);
+};
+
 
 LBUI3d.LocalPOVCameraController.prototype.setStandardView = function(view) {
     var azimuthDeg = 0;
@@ -876,26 +963,26 @@ LBUI3d.LocalPOVCameraController.prototype.setStandardView = function(view) {
     }
     
     this.localOrientation.azimuthDeg = azimuthDeg + this.forwardAzimuthDeg;
-    this.requestLocalCameraPOV(this.localPosition, this.localOrientation);
+    this.setLocalCameraPOV(this.localPosition, this.localOrientation);
 };
 
 LBUI3d.LocalPOVCameraController.prototype.rotatePOVDeg = function(horzDeg, vertDeg) {
     this.localOrientation.azimuthDeg += horzDeg;
     this.localOrientation.altitudeDeg += vertDeg;
-    this.requestLocalCameraPOV(this.localPosition, this.localOrientation);
+    this.setLocalCameraPOV(this.localPosition, this.localOrientation);
 };
 
 
 LBUI3d.LocalPOVCameraController.prototype.panPOV = function(dx, dy) {
     this.localPosition.x += dx;
     this.localPosition.y += dy;
-    this.requestLocalCameraPOV(this.localPosition, this.localOrientation);
+    this.setLocalCameraPOV(this.localPosition, this.localOrientation);
 };
 
 
 LBUI3d.LocalPOVCameraController.prototype.startPan = function() {
-    this.originalLocalPosition = LBGeometry.copyOrCloneVector3(this.originalLocalPosition, this.localPosition);
-    this.originalLocalOrientation = LBUI3d.SphericalOrientation.copyOrClone(this.originalLocalOrientation, 
+    this.originalLocalPosition = LBUtil.copyOrClone(this.originalLocalPosition, this.localPosition);
+    this.originalLocalOrientation = LBUtil.copyOrClone(this.originalLocalOrientation, 
         this.localOrientation);
         
     this.screenDistance = this.calcScreenDistance();
@@ -910,14 +997,22 @@ LBUI3d.LocalPOVCameraController.prototype.finishPan = function(isCancel) {
     if (isCancel) {
         this.localPosition.copy(this.originalLocalPosition);
         this.localOrientation.copy(this.originalLocalOrientation);
-        this.requestLocalCameraPOV(this.localPosition, this.localOrientation);
+        this.setLocalCameraPOV(this.localPosition, this.localOrientation);
         return;
     }
 };
 
 
+/**
+ * Calculates the spherical orientation from the camera POV to a point on the screen.
+ * Presumes {@link LBUI3d.LocalPOVCameraController#screenDistance} has been set to a valid distance.
+ * @param {Number} x    The x coordinate of the point on the screen in the view container's client coordinates.
+ * @param {Number} y    The y coordinate of the point on the screen in the view container's client coordinates.
+ * @param {LBSpherical.Orientation} [store] If defined the object to store the orientation into.
+ * @returns {LBSpherical.Orientation}   The spherical orientation
+ */
 LBUI3d.LocalPOVCameraController.prototype.calcOrientationFromScreenPos = function(x, y, store) {
-    store = store || new LBUI3d.SphericalOrientation();
+    store = store || new LBSpherical.Orientation();
     
     var dx = x - this.view.container.clientWidth / 2;
     var dy = y - this.view.container.clientHeight / 2;
@@ -930,8 +1025,10 @@ LBUI3d.LocalPOVCameraController.prototype.calcOrientationFromScreenPos = functio
 
 
 LBUI3d.LocalPOVCameraController.prototype.startRotate = function() {
-    this.originalLocalPosition = LBGeometry.copyOrCloneVector3(this.originalLocalPosition, this.localPosition);
-    this.originalLocalOrientation = LBUI3d.SphericalOrientation.copyOrClone(this.originalLocalOrientation, 
+    this.currentTransitionTime = 0;
+    
+    this.originalLocalPosition = LBUtil.copyOrClone(this.originalLocalPosition, this.localPosition);
+    this.originalLocalOrientation = LBUtil.copyOrClone(this.originalLocalOrientation, 
         this.localOrientation);
         
 
@@ -947,7 +1044,7 @@ LBUI3d.LocalPOVCameraController.prototype.trackRotate = function(x, y, timeStamp
         return;
     }
     
-    this.prevLocalOrientation = LBUI3d.SphericalOrientation.copyOrClone(this.prevLocalOrientation, 
+    this.prevLocalOrientation = LBUtil.copyOrClone(this.prevLocalOrientation, 
         this.localOrientation);
 
     this.workingOrientation = this.calcOrientationFromScreenPos(x, y, this.workingOrientation);
@@ -956,45 +1053,26 @@ LBUI3d.LocalPOVCameraController.prototype.trackRotate = function(x, y, timeStamp
     this.workingOrientation.altitudeDeg += this.originalLocalOrientation.altitudeDeg - this.startOrientation.altitudeDeg;
     
     this.localOrientation.copy(this.workingOrientation);
-    this.requestLocalCameraPOV(this.localPosition, this.localOrientation);
+    this.setLocalCameraPOV(this.localPosition, this.localOrientation);
 };
 
 
 LBUI3d.LocalPOVCameraController.prototype.finishRotate = function(isCancel) {
     if (isCancel) {
         this.localOrientation.copy(this.originalLocalOrientation);
-        this.requestLocalCameraPOV(this.localPosition, this.localOrientation);
+        this.setLocalCameraPOV(this.localPosition, this.localOrientation);
         return;
     }
     
-    if ((this.deltaT > 0) && (this.deceleration > 0)) {
+    if ((this.deltaT > 0) && (this.degDecel > 0)) {
+        this.localOrientationVel = this.localOrientationVel || new LBSpherical.Orientation();
+        
         // If we have an orientation change, then we have a velocity that we can 
         // decelerate to 0.
-        var vAzimuthDeg = (this.localOrientation.azimuthDeg - this.prevLocalOrientation.azimuthDeg) / this.deltaT;
-        if (LBMath.isLikeZero(vAzimuthDeg)) {
-            vAzimuthDeg = 0;
-        }
-
-        var vAltitudeDeg = (this.localOrientation.altitudeDeg - this.prevLocalOrientation.altitudeDeg) / this.deltaT;
-        if (LBMath.isLikeZero(vAltitudeDeg)) {
-            vAltitudeDeg = 0;
-        }
+        this.localOrientationVel.azimuthDeg = (this.localOrientation.azimuthDeg - this.prevLocalOrientation.azimuthDeg) / this.deltaT;
+        this.localOrientationVel.altitudeDeg = (this.localOrientation.altitudeDeg - this.prevLocalOrientation.altitudeDeg) / this.deltaT;
         
-        // a = dV/dt
-        // dt = V/a
-        var dtAzimuth = vAzimuthDeg / this.deceleration;
-        var dtAltitude = vAltitudeDeg / this.deceleration;
-        var dt = Math.max(dtAzimuth, dtAltitude);
-        var dtSq = dt * dt;
-        var deltaAzimuthDeg = vAzimuthDeg * dtSq;
-        var deltaAltitudeDeg = vAltitudeDeg * dtSq;
-        
-        this.localOrientation.azimuthDeg += deltaAzimuthDeg;
-        this.localOrientation.altitudeDeg += deltaAltitudeDeg;
-        
-        // TODO:
-        // Now we need to set the destination, along with how we're going to get there.
-        
+        this.requestLocalCameraPOVDeceleration(LBGeometry.ZERO, this.localOrientationVel);
     }
 };
 
@@ -1002,7 +1080,7 @@ LBUI3d.LocalPOVCameraController.prototype.finishRotate = function(isCancel) {
 /**
  * A camera controller that tries to follow the target at a given position relative to the
  * target. This differs from {@link LBUI3d.LocalPOVCameraController} in that for this
- * the camera is looking at the target, whereas for the first person controller the
+ * the camera is looking towards the target, whereas for the first person controller the
  * camera is looking from the target.
  * @constructor
  * @param {LBUI3d.CameraLimits} [globalLimits]   Optional limits on the global camera position.
@@ -1010,11 +1088,264 @@ LBUI3d.LocalPOVCameraController.prototype.finishRotate = function(isCancel) {
  */
 LBUI3d.FollowCameraController = function(globalLimits) {
     LBUI3d.CameraController.call(this, globalLimits);
+    
+    // The camera is ideally positioned at a certain spherical coordinates from the target
+    // in the target's local coordinate system.
+    // The camera reference orientation is pointing at the target with z the up direction.
+    // Rotating the camera involves changing the orientation of the camera relative to its local orientation reference.
+    // Panning/zooming the camera has the effect of changing the spherical coordinates
+    // of the camera relative to the target.
+    //
+    // Since the target may be moving all over the place, and we're not on the target,
+    // we want to smoothly move in world coordinates. This means that we need to establish
+    // a desired world position/orientation, and try to smoothly move towards it, which
+    // would be changing every tick.
+    
+    /**
+     * The desired position of the camera relative to the target's local coordinate system, in
+     * spherical coordinates.
+     * @member {LBSpherical.CoordinatesRAA}
+     */
+    this.desiredCameraFromTargetLocal = new LBSpherical.CoordinatesRAA();
+    
+    /**
+     * The desired orientation of the camera relative to a reference frame that has
+     * the camera pointing at the target and the z axis up.
+     * @member {LBSpherical.Orientation}
+     */
+    this.desiredCameraOrientation = new LBSpherical.Orientation();
+    
+    // Each tick we want to:
+    // Calculate a desired world position/quaternion from the 
+    
+    this.currentTransitionTime = 0;
 };
 
 LBUI3d.FollowCameraController.prototype = Object.create(LBUI3d.CameraController.prototype);
 LBUI3d.FollowCameraController.prototype.constructor = LBUI3d.FollowCameraController;
 
+LBUI3d.FollowCameraController.prototype.updateCameraPosition = function(dt, position, quaternion) {
+    if (this.target) {
+        if (this.currentTransitionTime > 0) {
+            dt = Math.min(dt, this.currentTransitionTime);
+            this.currentTransitionTime -= dt;
+/*            
+            this.localPosition.x += this.localPositionVel.x * dt;
+            this.localPosition.y += this.localPositionVel.y * dt;
+            this.localPositionVel.x = decelVelTowardsZero(dt, this.localPositionVel.x, this.localPositionDecel.x);
+            this.localPositionVel.y = decelVelTowardsZero(dt, this.localPositionVel.y, this.localPositionDecel.y);
+            
+            // Probably want to convert this to quaternion based...
+            this.localOrientation.altitudeDeg += this.localOrientationVel.altitudeDeg * dt;
+            this.localOrientation.azimuthDeg += this.localOrientationVel.azimuthDeg * dt;
+            
+            this.localOrientationVel.altitudeDeg = decelVelTowardsZero(dt, this.localOrientationVel.altitudeDeg, 
+                this.localOrientationDecel.altitudeDeg);
+            this.localOrientationVel.azimuthDeg = decelVelTowardsZero(dt, this.localOrientationVel.azimuthDeg, 
+                this.localOrientationDecel.azimuthDeg);
+*/            
+        }
+        
+//        this.localPosOrientationToWorldPosQuaternion(this.localPosition, this.localOrientation, position, quaternion);
+    }
+};
+
+/**
+ * Sets the point of view of the camera to a specific position and spherical orientation.
+ * @param {LBGeometry.Vector3} position The local position.
+ * @param {LBSpherical.Orientation} sphericalOrientation    The spherical orientation.
+ * @returns {undefined}
+ */
+LBUI3d.FollowCameraController.prototype.setLocalCameraPOV = function(position, sphericalOrientation) {
+    this.localPosition.copy(position);
+    this.localOrientation.copy(sphericalOrientation);
+};
+
+/**
+ * Requests the point of view of the camera be decelerated to 0 velocity given an initial velocity.
+ * @param {LBGeometry.Vector3} positionVel The local position velocity.
+ * @param {LBSpherical.Orientation} orientationVel    The spherical orientation velocity.
+ * @returns {undefined}
+ */
+LBUI3d.FollowCameraController.prototype.requestLocalCameraPOVDeceleration = function(positionVel, orientationVel) {
+    // Figure out the longest time to decel to zero.
+    // Then figure out the deceleration rates to take that time to zero.
+    var dt = calcDecelTimeToZero(positionVel.x, this.positionDecel);
+    dt = Math.max(dt, calcDecelTimeToZero(positionVel.y, this.positionDecel));
+    dt = Math.max(dt, calcDecelTimeToZero(orientationVel.azimuthDeg, this.degDecel));
+    dt = Math.max(dt, calcDecelTimeToZero(orientationVel.altitudeDeg, this.degDecel));
+    dt = Math.min(dt, this.maxTransitionTime);
+    
+    if (LBMath.isLikeZero(dt)) {
+        this.currentTransitionTime = 0;
+        return;
+    }
+    
+    this.currentTransitionTime = dt;
+    this.localPositionVel = LBUtil.copyOrClone(this.localPositionVel, positionVel);
+    this.localOrientationVel = LBUtil.copyOrClone(this.localOrientationVel, orientationVel);
+    
+    this.localPositionDecel = this.localPositionDecel || new LBGeometry.Vector3();
+    this.localPositionDecel.x = calcDecelRateForTime(positionVel.x, dt);
+    this.localPositionDecel.y = calcDecelRateForTime(positionVel.y, dt);
+    
+    this.localOrientationDecel = this.localOrientationDecel || new LBSpherical.Orientation();
+    this.localOrientationDecel.azimuthDeg = calcDecelRateForTime(orientationVel.azimuthDeg, dt);
+    this.localOrientationDecel.altitudeDeg = calcDecelRateForTime(orientationVel.altitudeDeg, dt);
+};
+
+
+LBUI3d.FollowCameraController.prototype.setStandardView = function(view) {
+    var azimuthDeg = 0;
+    this.localOrientation.altitudeDeg = 0;
+    
+    switch (view) {
+        case LBUI3d.CameraController.VIEW_FWD :
+            azimuthDeg = 0;
+            break;
+        case LBUI3d.CameraController.VIEW_FWD_STBD :
+            azimuthDeg = -45;
+            break;
+        case LBUI3d.CameraController.VIEW_STBD :
+            azimuthDeg = -90;
+            break;
+        case LBUI3d.CameraController.VIEW_AFT_STBD :
+            azimuthDeg = -135;
+            break;
+        case LBUI3d.CameraController.VIEW_AFT :
+            azimuthDeg = 180;
+            break;
+        case LBUI3d.CameraController.VIEW_AFT_PORT :
+            azimuthDeg = 135;
+            break;
+        case LBUI3d.CameraController.VIEW_PORT :
+            azimuthDeg = 90;
+            break;
+        case LBUI3d.CameraController.VIEW_FWD_PORT :
+            azimuthDeg = 45;
+            break;
+        case LBUI3d.CameraController.VIEW_UP :
+            azimuthDeg = this.localOrientation.azimuthDeg - this.forwardAzimuthDeg;
+            this.localOrientation.altitudeDeg = -90;
+            break;
+            
+        default :
+            return;
+    }
+    
+    this.localOrientation.azimuthDeg = azimuthDeg + this.forwardAzimuthDeg;
+    this.setLocalCameraPOV(this.localPosition, this.localOrientation);
+};
+
+LBUI3d.FollowCameraController.prototype.rotatePOVDeg = function(horzDeg, vertDeg) {
+    this.localOrientation.azimuthDeg += horzDeg;
+    this.localOrientation.altitudeDeg += vertDeg;
+    this.setLocalCameraPOV(this.localPosition, this.localOrientation);
+};
+
+
+LBUI3d.FollowCameraController.prototype.panPOV = function(dx, dy) {
+    this.localPosition.x += dx;
+    this.localPosition.y += dy;
+    this.setLocalCameraPOV(this.localPosition, this.localOrientation);
+};
+
+
+LBUI3d.FollowCameraController.prototype.startPan = function() {
+    this.originalLocalPosition = LBUtil.copyOrClone(this.originalLocalPosition, this.localPosition);
+    this.originalLocalOrientation = LBUtil.copyOrClone(this.originalLocalOrientation, 
+        this.localOrientation);
+        
+    this.screenDistance = this.calcScreenDistance();
+};
+
+
+LBUI3d.FollowCameraController.prototype.trackPan = function(x, y, timeStamp) {
+};
+
+
+LBUI3d.FollowCameraController.prototype.finishPan = function(isCancel) {
+    if (isCancel) {
+        this.localPosition.copy(this.originalLocalPosition);
+        this.localOrientation.copy(this.originalLocalOrientation);
+        this.setLocalCameraPOV(this.localPosition, this.localOrientation);
+        return;
+    }
+};
+
+
+/**
+ * Calculates the spherical orientation from the camera POV to a point on the screen.
+ * Presumes {@link LBUI3d.LocalPOVCameraController#screenDistance} has been set to a valid distance.
+ * @param {Number} x    The x coordinate of the point on the screen in the view container's client coordinates.
+ * @param {Number} y    The y coordinate of the point on the screen in the view container's client coordinates.
+ * @param {LBSpherical.Orientation} [store] If defined the object to store the orientation into.
+ * @returns {LBSpherical.Orientation}   The spherical orientation
+ */
+LBUI3d.FollowCameraController.prototype.calcOrientationFromScreenPos = function(x, y, store) {
+    store = store || new LBSpherical.Orientation();
+    
+    var dx = x - this.view.container.clientWidth / 2;
+    var dy = y - this.view.container.clientHeight / 2;
+    
+    store.azimuthDeg = Math.atan2(dx, this.screenDistance) * LBMath.RAD_TO_DEG;
+    store.altitudeDeg = -Math.atan2(dy, this.screenDistance) * LBMath.RAD_TO_DEG;
+
+    return store;
+};
+
+
+LBUI3d.FollowCameraController.prototype.startRotate = function() {
+    this.currentTransitionTime = 0;
+    
+    this.originalLocalPosition = LBUtil.copyOrClone(this.originalLocalPosition, this.localPosition);
+    this.originalLocalOrientation = LBUtil.copyOrClone(this.originalLocalOrientation, 
+        this.localOrientation);
+        
+
+    this.screenDistance = this.calcScreenDistance();
+    if (this.screenDistance) {
+        this.startOrientation = this.calcOrientationFromScreenPos(this.startX, this.startY, this.startOrientation);
+    }
+};
+
+
+LBUI3d.FollowCameraController.prototype.trackRotate = function(x, y, timeStamp) {
+    if (!this.screenDistance) {
+        return;
+    }
+    
+    this.prevLocalOrientation = LBUtil.copyOrClone(this.prevLocalOrientation, 
+        this.localOrientation);
+
+    this.workingOrientation = this.calcOrientationFromScreenPos(x, y, this.workingOrientation);
+    
+    this.workingOrientation.azimuthDeg += this.originalLocalOrientation.azimuthDeg - this.startOrientation.azimuthDeg;
+    this.workingOrientation.altitudeDeg += this.originalLocalOrientation.altitudeDeg - this.startOrientation.altitudeDeg;
+    
+    this.localOrientation.copy(this.workingOrientation);
+    this.setLocalCameraPOV(this.localPosition, this.localOrientation);
+};
+
+
+LBUI3d.FollowCameraController.prototype.finishRotate = function(isCancel) {
+    if (isCancel) {
+        this.localOrientation.copy(this.originalLocalOrientation);
+        this.setLocalCameraPOV(this.localPosition, this.localOrientation);
+        return;
+    }
+    
+    if ((this.deltaT > 0) && (this.degDecel > 0)) {
+        this.localOrientationVel = this.localOrientationVel || new LBSpherical.Orientation();
+        
+        // If we have an orientation change, then we have a velocity that we can 
+        // decelerate to 0.
+        this.localOrientationVel.azimuthDeg = (this.localOrientation.azimuthDeg - this.prevLocalOrientation.azimuthDeg) / this.deltaT;
+        this.localOrientationVel.altitudeDeg = (this.localOrientation.altitudeDeg - this.prevLocalOrientation.altitudeDeg) / this.deltaT;
+        
+        this.requestLocalCameraPOVDeceleration(LBGeometry.ZERO, this.localOrientationVel);
+    }
+};
 
 return LBUI3d;
 });
