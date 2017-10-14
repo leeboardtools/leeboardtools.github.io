@@ -531,7 +531,7 @@ function touchDistance(event) {
  * @param {TouchEvent} event    The touch event.
  */
 LBUI3d.CameraController.prototype.onTouchStart = function(event) {
-    event.preventDefault();
+    //event.preventDefault();
     
     switch (event.touches.length) {
         case 1 :
@@ -557,18 +557,16 @@ LBUI3d.CameraController.prototype.onTouchStart = function(event) {
  */
 LBUI3d.CameraController.prototype.onTouchMove = function(event) {
     event.preventDefault();
+    event.stopPropagation();
     
     switch (event.touches.length) {
         case 1 :
+        case 3 :
             this.performTrack(event.touches[0].pageX, event.touches[0].pageY, event.timeStamp);
             break;
             
         case 2 :
             this.performTrack(touchDistance(event), 0, event.timeStamp);
-            break;
-            
-        case 3 :
-            this.performTrack(event.touches[0].pageX, event.touches[0].pageY, event.timeStamp);
             break;
     }
 };
@@ -581,18 +579,7 @@ LBUI3d.CameraController.prototype.onTouchMove = function(event) {
 LBUI3d.CameraController.prototype.onTouchEnd = function(event) {
     event.preventDefault();
     
-    switch (event.touches.length) {
-        case 1 :
-            this.endTracking(false);
-            break;
-            
-        case 2 :
-            break;
-            
-        case 3 :
-            this.endTracking(false);
-            break;
-    }
+    this.endTracking(false);
 };
 
 /**
