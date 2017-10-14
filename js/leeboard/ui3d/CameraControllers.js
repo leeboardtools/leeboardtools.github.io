@@ -642,7 +642,7 @@ LBUI3d.CameraController.prototype.startZoom = function() {
  * @param {Number} timeStamp    The track event time stamp.
  */
 LBUI3d.CameraController.prototype.trackZoom = function(x, y, timeStamp) {
-    this.setZoom(this.startZoomScale * x / this.startZoom);
+    this.setZoom(this.startZoomScale * x / this.startX);
 };
 
 /**
