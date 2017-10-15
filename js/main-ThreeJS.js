@@ -20,6 +20,15 @@ require( ['three', 'lbsailsim', 'lbui3d', 'lbutil', 'lbmath', 'lbgeometry', 'lba
         
         
     'use strict';
+    
+    
+function noSliderKeys(slider) {
+    if (slider) {
+        slider.addEventListener('keydown', function(event) {
+            event.preventDefault();
+        });
+    }
+}    
         
 function LBMyApp() {
     LBUI3d.App3D.call(this);
@@ -55,13 +64,18 @@ function LBMyApp() {
 
     this.rudderSliderElement = document.getElementById('rudder_slider');
     this.rudderControl = document.getElementById('rudder');
+    noSliderKeys(this.rudderControl);
     this.throttleSliderElement = document.getElementById('throttle_slider');
     this.throttleControl = document.getElementById('throttle');
+    noSliderKeys(this.throttleControl);
     
     this.mainsheetSliderElement = document.getElementById('main_slider');
     this.mainsheetControl = document.getElementById('mainsheet');
+    noSliderKeys(this.mainsheetControl);
+
     this.jibsheetSliderElement = document.getElementById('jib_slider');
     this.jibsheetControl = document.getElementById('jibsheet');
+    noSliderKeys(this.jibsheetControl);
     
     this.assetLoader = new LBAssets.Loader();
     
