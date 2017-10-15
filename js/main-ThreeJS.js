@@ -732,9 +732,6 @@ LBMyApp.prototype.onRudderChange = function(value, min, max) {
             rudderController.setMappedValue(value, max, min);
         }
     }
-    if (this.rudderControl) {
-        this.rudderControl.blur();
-    }
 };
 
 LBMyApp.prototype.onThrottleChange = function(value, min, max) {
@@ -743,9 +740,6 @@ LBMyApp.prototype.onThrottleChange = function(value, min, max) {
         if (controller) {
             controller.setMappedValue(value, min, max);
         }
-    }
-    if (this.throttleControl) {
-        this.throttleControl.blur();
     }
 };
 
@@ -756,9 +750,6 @@ LBMyApp.prototype.onJibsheetChange = function(value, min, max) {
             controller.setMappedValue(value, min, max);
         }
     }
-    if (this.jibsheetControl) {
-        this.jibsheetControl.blur();
-    }
 };
 
 LBMyApp.prototype.onMainsheetChange = function(value, min, max) {
@@ -767,9 +758,6 @@ LBMyApp.prototype.onMainsheetChange = function(value, min, max) {
         if (controller) {
             controller.setMappedValue(value, min, max);
         }
-    }
-    if (this.mainsheetControl) {
-        this.mainsheetControl.blur();
     }
 };
 
