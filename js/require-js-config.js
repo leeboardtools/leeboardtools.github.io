@@ -21,6 +21,7 @@ var require = {
         'three': 'lib/three',
         'cannon': 'lib/cannon',
         'phaser': 'lib/phaser',
+        'tween': 'lib/Tween',
         
         'lbcannonutil': 'leeboard/cannon/CannonUtil',
         'lbcannonphysicslink': 'leeboard/cannon/CannonPhysicsLink',
@@ -37,6 +38,7 @@ var require = {
         'lbphysics': 'leeboard/core/Physics',
         'lbphysicslink': 'leeboard/core/PhysicsLink',
         'lbspherical': 'leeboard/core/Spherical',
+        'lbtracking': 'leeboard/core/Tracking',
         'lbutil': 'leeboard/core/Util',
         'lbvolume': 'leeboard/core/Volume',
         
@@ -61,26 +63,28 @@ var require = {
         'lbsailsimphaserview': 'leeboard/sailsim-phaser/SailSimPhaserView',
         
         'lbsailsimthree': 'leeboard/sailsim-three/SailSim-THREE',
+        'lbsky3d': 'leeboard/sailsim-three/Sky3D',
+        'lbwakes3d': 'leeboard/sailsim-three/Wakes3D',
+        'lbwater3d': 'leeboard/sailsim-three/Water3D',
         
         'lbthreejs': 'leeboard/three-js/ThreeJSUtil',
         
-        'three-orbit': 'leeboard/three-js-extras/controls/OrbitControls',
         'three-detector': 'leeboard/three-js-extras/Detector',
         
         'lbapp3d': 'leeboard/ui3d/App3D',
         'lbscene3d': 'leeboard/ui3d/Scene3D',
         'lbview3d': 'leeboard/ui3d/View3D',
         'lbcameracontrollers': 'leeboard/ui3d/CameraControllers',
+        'lbparticles': 'leeboard/ui3d/Particles',
         'lbui3d': 'leeboard/ui3d/LBUI3d'
     },
     shim: {
-        'three-orbit': {
-            deps: ['three'],
-            exports: 'THREE'
-        },
-        
         'phaser': {
             exports: 'Phaser'
+        },
+        
+        'tween': {
+            exports: 'TWEEN'
         },
         
         'cannon': {

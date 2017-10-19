@@ -357,7 +357,7 @@ and open the template in the editor.
             
             /* The wind SVG icon. */
             .wind_icon {
-                padding: 5px;
+                padding: 7px;
                 width: 1.5rem;
                 height: 1.5rem;
             }
@@ -386,9 +386,43 @@ and open the template in the editor.
                 float: left;
             }
             
+            .north_east {
+                transform: rotate(45deg);
+            }
+            
+            .east {
+                transform: rotate(90deg);
+            }
+            
+            .south_east {
+                transform: rotate(135deg);
+            }
+            
+            .south {
+                transform: rotate(180deg);
+            }
+            
+            .south_west {
+                transform: rotate(225deg);
+            }
+            
+            .west {
+                transform: rotate(270deg);
+            }
+            
+            .north_west {
+                transform: rotate(315deg);
+            }
+            
             #wind_menu {
                 position: absolute;
                 left: 10rem;
+                padding: 5px;
+            }
+            
+            #view_menu {
+                position: absolute;
+                left: 12rem;
                 padding: 5px;
             }
             
@@ -520,6 +554,32 @@ and open the template in the editor.
                         </div>
                     </div>
                 </div>
+                
+                <div id="view_menu" class="dropdown">
+                    <div class="dropdown_btn menu_button">
+                        <i class="material-icons">settings_overscan</i>
+                    </div>
+                    <div class="dropdown_items">
+                        <div id="view_aft" class="dropdown_item menu_button" onclick="myApp.viewAft()">
+                            <i class="material-icons">arrow_downward</i>
+                        </div>
+                        <div id="view_fwd" class="dropdown_item menu_button" onclick="myApp.viewFwd()">
+                            <i class="material-icons">arrow_upward</i>
+                        </div>
+                        <div id="view_port" class="dropdown_item menu_button" onclick="myApp.viewPort()">
+                            <i class="material-icons">arrow_back</i>
+                        </div>
+                        <div id="view_stbd" class="dropdown_item menu_button" onclick="myApp.viewStbd()">
+                            <i class="material-icons">arrow_forward</i>
+                        </div>
+                        <div id="view_up" class="dropdown_item menu_button" onclick="myApp.viewUp()">
+                            <i class="material-icons">cloud_queue</i>
+                        </div>
+                        <div id="camera_view" class="dropdown_item menu_button" onclick="myApp.nextCameraView()">
+                            <i class="material-icons">directions_boat</i>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="menu_bar_top">
                     <div id="menu_full_screen" class="menu_button horiz_menu_button" onclick="myApp.toggleFullScreen(document.getElementById('container'))">
@@ -641,7 +701,8 @@ and open the template in the editor.
                 <div id="hull_controls">
                     <div id="rudder_slider">
                         <div class="slider_top_label">Rudder</div>
-                        <div><input id="rudder" class="horizontal_slider hull_control_slider" type="range" value="0" min="-100" max="100" oninput="myApp.onRudderChange(value, min, max)"></div>
+                        <div><input id="rudder" class="horizontal_slider hull_control_slider" type="range" value="0" min="-100" max="100" oninput="myApp.onRudderChange(value, min, max)"
+                                    data-flip_min_max="true"></div>
                     </div>
                     <div id="throttle_slider">
                         <div class="slider_bottom_label">Throttle</div>
@@ -797,9 +858,16 @@ and open the template in the editor.
                 <div id="fatal_error_msg2" class="fatal_error fatal_error_msg"></div>
             </div>
         </div>
-<!--
-        <script src="js/main-ThreeJS.js"></script>
--->
+
+        <script>
+            // TODO:
+            // Put up a splash screen that we can hide when we're loaded.
+            // 
+            // For now, hide these, they're made visible when appropriate.
+            document.getElementById('throttle_slider').hidden = true;
+            document.getElementById('jib_slider').hidden = true;
+        </script>
+        
         <script src="js/require-js-config.js"></script>
         <script src="js/lib/require.js" data-main="main-ThreeJS"></script>
         
