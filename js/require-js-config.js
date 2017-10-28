@@ -70,12 +70,14 @@ var require = {
         'lbthreejs': 'leeboard/three-js/ThreeJSUtil',
         
         'three-detector': 'leeboard/three-js-extras/Detector',
+        'three-gpuparticlesystem': 'leeboard/three-js-extras/GPUParticleSystem',
         
         'lbapp3d': 'leeboard/ui3d/App3D',
         'lbscene3d': 'leeboard/ui3d/Scene3D',
         'lbview3d': 'leeboard/ui3d/View3D',
         'lbcameracontrollers': 'leeboard/ui3d/CameraControllers',
         'lbparticles': 'leeboard/ui3d/Particles',
+        'lbshaders': 'leeboard/ui3d/Shaders',
         'lbui3d': 'leeboard/ui3d/LBUI3d'
     },
     shim: {
@@ -87,8 +89,14 @@ var require = {
             exports: 'TWEEN'
         },
         
+        'three-gpuparticlesystem': {
+            deps: ['three'],
+            exports: 'THREE'
+        },
+        
         'cannon': {
             exports: 'CANNON'
         }
+        
     }
 };
