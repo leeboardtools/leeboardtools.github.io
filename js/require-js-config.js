@@ -37,6 +37,7 @@ var require = {
         'lbmath': 'leeboard/core/Math',
         'lbphysics': 'leeboard/core/Physics',
         'lbphysicslink': 'leeboard/core/PhysicsLink',
+        'lbrandom': 'leeboard/core/Random',
         'lbspherical': 'leeboard/core/Spherical',
         'lbtracking': 'leeboard/core/Tracking',
         'lbutil': 'leeboard/core/Util',
@@ -58,6 +59,8 @@ var require = {
         'lbsailsim': 'leeboard/sailsim/SailSim',
         'lbsailsimbase': 'leeboard/sailsim/SailSimBase',
         'lbvessel': 'leeboard/sailsim/Vessel',
+        'lbwater': 'leeboard/sailsim/Water',
+        'lbwind': 'leeboard/sailsim/Wind',
         
         'lbsailsimphaser': 'leeboard/sailsim-phaser/SailSim-Phaser',
         'lbsailsimphaserview': 'leeboard/sailsim-phaser/SailSimPhaserView',
