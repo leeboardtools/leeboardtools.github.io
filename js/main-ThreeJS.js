@@ -284,6 +284,9 @@ LBMyApp.prototype.closeSplash = function(event) {
 
     this.toggleHUDBoat();
     this.toggleHUDWind();
+    
+    this.sailEnv.wind.setAverageForce(4);
+
 };
 
 /**
