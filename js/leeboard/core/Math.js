@@ -21,33 +21,45 @@ function(LBUtil) {
     
 
 /**
- * 
- * @namespace LBMath
+ * The math module...
+ * @exports LBMath
  */
 var LBMath = LBMath || {};
 
 /**
- * @property {Number} DEG_TO_RAD    Degrees to radians scale.
+ * Degrees to radians scale.
+ * @constant
+ * @type {Number}
+ * @default
  */
 LBMath.DEG_TO_RAD = Math.PI / 180;
 
 /**
- * @property {Number} RAD_TO_DEG    Radians to degrees scale.
+ * Radians to degrees scale.
+ * @constant
+ * @type {Number}
+ * @default
  */
 LBMath.RAD_TO_DEG = 180 / Math.PI;
 
 /**
- * @property {Number} TWO_PI    2 * PI
+ * 2 * PI
+ * @constant
+ * @type {Number}
+ * @default
  */
 LBMath.TWO_PI = Math.PI * 2;
 
 /**
- * @property {Number} PI_2    PI / 2
+ * PI / 2
+ * @constant
+ * @type {Number}
+ * @default
  */
 LBMath.PI_2 = Math.PI / 2;
 
 /**
- * @property {Number} The default zero tolerance used by {@link LBMath.isLikeZero} and {@link LBMath.isNearEqual}.
+ * @property {Number} The default zero tolerance used by {@link module:LBMath.isLikeZero} and {@link module:LBMath.isNearEqual}.
  */
 LBMath.defZeroTolerance = 1e-10;
 
@@ -86,7 +98,7 @@ LBMath.isNearEqual = function(a, b, tolerance) {
 };
 
 /**
- * Converts a value to zero if it is considered like zero by {@link LBMath.isLikeZero}.
+ * Converts a value to zero if it is considered like zero by {@link module:LBMath.isLikeZero}.
  * @param {Number} x    The value.
  * @param {Number} [tolerance=LBMath.defZeroTolerance]  The optional tolerance.
  * @returns {Number}    x or 0.
@@ -168,7 +180,7 @@ LBMath.subDegrees = function(a, b) {
  * @constructor
  * @param {Number} baseDeg  The base angle in degrees.
  * @param {Number} range    The range from baseDeg, in degrees. This may be negative.
- * @returns {LBMath.DegRange}
+ * @returns {module:LBMath.DegRange}
  */
 LBMath.DegRange = function(baseDeg, range) {
     this.setRange(baseDeg, range);
@@ -179,7 +191,7 @@ LBMath.DegRange.prototype = {
      * Sets the range from a base angle and the range from the base angle.
      * @param {Number} baseDeg  The base angle in degrees.
      * @param {Number} range    The range from baseDeg, in degrees. This may be negative.
-     * @returns {LBMath.DegRange}   this.
+     * @returns {module:LBMath.DegRange}   this.
      */
     setRange: function(baseDeg, range) {
         if (range < 0) {
@@ -194,7 +206,7 @@ LBMath.DegRange.prototype = {
             this.maxDeg = 180;
         }
         else {
-            // We can use -180 because {@link LBMath.wrapDegrees} returns angles &gt; -180.
+            // We can use -180 because {@link module:LBMath.wrapDegrees} returns angles &gt; -180.
             this.maxDeg2 = -180;
         }
         return this;
@@ -202,9 +214,9 @@ LBMath.DegRange.prototype = {
     
     /**
      * Sets the range from a lower and an upper limit.
-     * @param {type} limitA
-     * @param {type} limitB
-     * @returns {LBMath.DegRange}   this.
+     * @param {Number} limitA
+     * @param {Number} limitB
+     * @returns {module:LBMath.DegRange}   this.
      */
     setRangeFromLimits: function(limitA, limitB) {
         return this.setRange(limitA, limitB - limitA);
@@ -237,7 +249,7 @@ LBMath.DegRange.prototype = {
         }
         else if (deg > this.maxDeg) {
             // Are we closer to maxDeg or minDeg?
-            return ((deg - this.maxDeg) < (deg - 360 - this.minDeg)) ? this.maxDeg : this.minDeg;
+            return ((deg - this.maxDeg) < Math.abs(deg - 360 - this.minDeg)) ? this.maxDeg : this.minDeg;
         }
         return deg;
     },
@@ -367,10 +379,10 @@ LBMath.smoothstep7 = function(x) {
 
 /**
  * Transitions between two values by applying a function.
- * @param {type} x  The transition value to pass to smoothFunc
- * @param {type} ya The output for x &le; 0.
- * @param {type} yb The output for x &ge; 1.
- * @param {type} smoothFunc The smoothing function, should smoothly transition
+ * @param {Number} x  The transition value to pass to smoothFunc
+ * @param {Number} ya The output for x &le; 0.
+ * @param {Number} yb The output for x &ge; 1.
+ * @param {Number} smoothFunc The smoothing function, should smoothly transition
  * between 0 when x is 0 and 1 when x is 1, see one of the smoothstep functions.
  * @returns {Number}    The y value smoothly transitioning between ya and yb.
  */
@@ -385,8 +397,8 @@ LBMath.transition = function(x, ya, yb, smoothFunc) {
  * @constructor
  * @param {Array|object} [xs]    Optional array of x values, this must be sorted such that xs[i] &lt; xs[i+1].
  * May also be an object with two properties, 'xs' and 'ys', that are both arrays.
- * @param {Array} [ys]    Optional array of y values corresponding to the xs.
- * @returns {LBMath.CSpline}
+ * @param {Number[]} [ys]    Optional array of y values corresponding to the xs.
+ * @returns {module:LBMath.CSpline}
  */
 LBMath.CSpline = function(xs, ys) {
     if (xs && !ys) {
@@ -417,8 +429,8 @@ LBMath.CSpline.prototype = {
     
     /**
      * Sets up the interpolator with the values ot interpolate.
-     * @param {Array} xs    The array of x values, this must be sorted such that xs[i] &lt; xs[i+1].
-     * @param {Array} ys    The array of y values corresponding to the xs.
+     * @param {Number[]} xs    The array of x values, this must be sorted such that xs[i] &lt; xs[i+1].
+     * @param {Number[]} ys    The array of y values corresponding to the xs.
      */
     setup: function(xs, ys) {
         this.xs = xs;
@@ -569,8 +581,8 @@ LBMath.finiteDiffBackFirst = function(dt, f0, fm1, fm2, fm3, fm4) {
 };
 
 /**
- * The maximum number of terms supported by {@link LBMath.finiteDiffBackFirst}.
- * @type Number
+ * The maximum number of terms supported by {@link module:LBMath.finiteDiffBackFirst}.
+ * @type {Number}
  */
 LBMath.finiteDiffBackFirst.MAX_TERMS = 5;
 

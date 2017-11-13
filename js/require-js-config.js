@@ -25,7 +25,6 @@ var require = {
         
         'lbcannonutil': 'leeboard/cannon/CannonUtil',
         'lbcannonphysicslink': 'leeboard/cannon/CannonPhysicsLink',
-        'lbcannon': 'leeboard/cannon/LBCannon',
         
         'lbassets': 'leeboard/core/Assets',
         'lbcamera': 'leeboard/core/Camera-THREE',
@@ -75,6 +74,7 @@ var require = {
         
         'three-detector': 'leeboard/three-js-extras/Detector',
         'three-gpuparticlesystem': 'leeboard/three-js-extras/GPUParticleSystem',
+        'three-skyshader': 'leeboard/three-js-extras/SkyShader',
         'three-watershader': 'leeboard/three-js-extras/WaterShader',
         
         'lbapp3d': 'leeboard/ui3d/App3D',
@@ -83,7 +83,8 @@ var require = {
         'lbcameracontrollers': 'leeboard/ui3d/CameraControllers',
         'lbparticles': 'leeboard/ui3d/Particles',
         'lbshaders': 'leeboard/ui3d/Shaders',
-        'lbui3d': 'leeboard/ui3d/LBUI3d'
+        'lbui3d': 'leeboard/ui3d/LBUI3d',
+        'lbui3dbase': 'leeboard/ui3d/LBUI3dBase'
     },
     shim: {
         'phaser': {
@@ -95,6 +96,11 @@ var require = {
         },
         
         'three-gpuparticlesystem': {
+            deps: ['three'],
+            exports: 'THREE'
+        },
+        
+        'three-skyshader': {
             deps: ['three'],
             exports: 'THREE'
         },

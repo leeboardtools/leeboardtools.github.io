@@ -16,31 +16,42 @@
 
 
 
-define(['lbsailsim', 'lbmath', 'three'],
-function(LBSailSim, LBMath, THREE) {
+define(['lbsailsim', 'lbmath', 'lbspherical', 'three', 'three-skyshader'],
+function(LBSailSim, LBMath, LBSpherical, THREE) {
     
 
 LBSailSim.Sky3D = function(scene3D, sailEnv) {
     this.scene3D = scene3D;
     this.sailEnv = sailEnv;
 
-    this.scene3D.scene.fog = new THREE.FogExp2( 0xaabbbb, 0.0001 );
+    this.scene3D.scene.fog = new THREE.FogExp2( 0xaabbbb, 0.001 );
     
-    this.loadSkyBox();
+    if (!this.loadSkyShader()) {
+        this.loadSkyBox();
+    }
 };
+
+var _minLightAltitudeDeg = -2.3;    // From THREE.Sky's fragment shader, which uses PI/1.95 as the cutoff angle.
 
 LBSailSim.Sky3D.prototype = {
     loadSkyBox: function() {
         // Adapted from ThreeJS examples/canvas_geometry_panorama.html, webgl_shaders_ocean.html...
         var loader = new THREE.CubeTextureLoader();
+        /*
         loader.setPath('textures/three-js/skybox/');
-        
         this.skyTextureCube = loader.load([
             'px.jpg', 'nx.jpg',
             'py.jpg', 'ny.jpg',
             'pz.jpg', 'nz.jpg'
         ]);
-
+        */
+        loader.setPath('textures/skybox-blue/');
+        this.skyTextureCube = loader.load([
+            'px.png', 'nx.png',
+            'py.png', 'ny.png',
+            'pz.png', 'nz.png'
+        ]);
+        
         
         var cubeShader = THREE.ShaderLib[ 'cube' ];
         cubeShader.uniforms[ 'tCube' ].value = this.skyTextureCube;
@@ -66,8 +77,39 @@ LBSailSim.Sky3D.prototype = {
         return true;
     },
     
-    update: function(dt) {
+    loadSkyShader: function() {
+        var radius = this.sailEnv.horizonDistance;
+        this.sky = new THREE.Sky(radius);
+        this.scene3D.add(this.sky.mesh);
         
+        var uniforms = this.sky.uniforms;
+        uniforms.turbidity.value = 3.5;
+        uniforms.rayleigh.value = 1.5;
+        uniforms.luminance.value = 0.5;
+        uniforms.mieCoefficient.value = 0.005;
+        uniforms.mieDirectionalG.value = 0.8;
+        this._sunCoords = new LBSpherical.CoordinatesRAE(radius);
+        this.setSunAzimuthAltitudeDeg(90, 20);
+        return true;
+    },
+    
+    setSunAzimuthAltitudeDeg: function(azimuthDeg, elevationDeg) {
+        this._sunCoords.azimuthDeg = azimuthDeg;
+        this._sunCoords.elevationDeg = elevationDeg;
+        
+        this._sunPos = this._sunCoords.toVector3(this._sunPos);
+        this.scene3D.coordMapping.vector3ToThreeJS(this._sunPos, this._sunPos);
+        
+        if (this.sky) {
+            this.sky.uniforms.sunPosition.value.copy(this._sunPos);
+        }
+    },
+    
+    
+    update: function(dt) {
+        if (this._sunPos && (this._sunCoords.elevationDeg > _minLightAltitudeDeg)) {
+            this.scene3D.mainLight.position.copy(this._sunPos);
+        }
     },
     
     destroy: function() {

@@ -149,38 +149,38 @@ Phaser.Point.prototype.copy = function(src) {
 LBPhaser.ArrowStyle = function(color, arrowLengthScaler, alpha, width, arrowSize) {
     /**
      * The RGB color of the arrow.
-     * @type number
+     * @member {Number}
      */
     this.color = color;
     
     /**
      * The pixel width of the arrow.
-     * @type number
+     * @member {Number}
      */
     this.width = width || 2;
     
     /**
      * The maximum size of the arrowhead in pixels.
-     * @type number
+     * @member {Number}
      */
     this.arrowSize = arrowSize || 20;
     
     /**
      * The alpha opacity to apply when drawing the arrow.
-     * @type number
+     * @member {Number}
      */
     this.alpha = alpha || 1;
     
     /**
      * The function used to scale the arrow length to modeling units (modeling units
      * are what are passed to {@link LBPhaser.Env#toPixelsX} and {@link LBPhaser.Env#toPixelsY}.
-     * @type function
+     * @member {Function}
      */
     this.arrowLengthScaler = arrowLengthScaler || LBPhaser.ArrowStyle.DEF_ARROW_LENGTH_SCALER;
     
     /**
      * Style visibility flag, can be used to hide all arrows that use this style.
-     * @type boolean
+     * @member {Boolean}
      */
     this.isVisible = true;
 };
@@ -202,8 +202,8 @@ LBPhaser.ArrowStyle.prototype = {
      * graphics object with the arrow.
      * @param {LBPhaser.Env} env    Our Phaser environment.
      * @param {Phaser.Graphics} g   The Phaser graphics object that draws the arrow.
-     * @param {LBGeometry.Vector2} base The base of the arrow.
-     * @param {LBGeometry.Vector2} tip   The tip of the arrow.
+     * @param {module:LBGeometry.Vector2} base The base of the arrow.
+     * @param {module:LBGeometry.Vector2} tip   The tip of the arrow.
      * @returns {undefined}
      */
     setupArrowGraphics: function(env, g, base, tip) {
@@ -335,7 +335,7 @@ LBPhaser.ArrowStyle.prototype = {
 
 /**
  * The default {@link LBPhaser.Arrow} style.
- * @type LBPhaser.ArrowStyle
+ * @type {LBPhaser.ArrowStyle}
  */
 LBPhaser.ArrowStyle.DEFAULT = new LBPhaser.ArrowStyle();
 
@@ -352,26 +352,26 @@ LBPhaser.ArrowStyle.DEFAULT = new LBPhaser.ArrowStyle();
 LBPhaser.Arrow = function(env, group, style) {
     /**
      * The Phaser environment.
-     * @type LBPhaser.Env
+     * @member {LBPhaser.Env}
      */
     this.env = env;
     
     /**
      * The graphics object used to draw the arrow.
-     * @type Phaser.Graphics
+     * @member {Phaser.Graphics}
      */
     this.graphics = env.game.add.graphics(0, 0, group);
     
     /**
      * The arrow's style.
-     * @type LBPhaser.ArrowStyle
+     * @member {LBPhaser.ArrowStyle}
      */
     this.style = style || LBPhaser.ArrowStyle.DEFAULT;
     
     /**
      * The local visibility flag for the arrow, the arrow is only drawn
      * if both this and the style's visibility flags are true.
-     * @type boolean
+     * @member {boolean}
      */
     this.isVisible = true;
 };
@@ -381,8 +381,8 @@ LBPhaser.Arrow.prototype = {
     /**
      * Sets the arrow from a point defining the base and a vector defining the
      * length and direction of the arrow from the base.
-     * @param {LBGeometry.Vector2} base The base of the arrow.
-     * @param {LBGeometry.Vector2} vector   The vector describing the length and direction of the
+     * @param {module:LBGeometry.Vector2} base The base of the arrow.
+     * @param {module:LBGeometry.Vector2} vector   The vector describing the length and direction of the
      * arrow from base. A 2D or 3D vector.
      * @returns {undefined}
      */
@@ -398,8 +398,8 @@ LBPhaser.Arrow.prototype = {
     /**
      * Sets the arrow from a point defining the base and a vector defining the
      * length and direction of the arrow from the base to the tip.
-     * @param {LBGeometry.Vector2} tip The tip of the arrow.
-     * @param {LBGeometry.Vector2} vector   The vector describing the length and direction of the
+     * @param {module:LBGeometry.Vector2} tip The tip of the arrow.
+     * @param {module:LBGeometry.Vector2} vector   The vector describing the length and direction of the
      * arrow from base. A 2D or 3D vector.
      * @returns {undefined}
      */

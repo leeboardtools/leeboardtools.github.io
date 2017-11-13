@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
+define([],
+function() {
+
 /**
- * This is the catch-all file that loads all the LBCannon dependencies.
+ * My 3D application framework module, these classes all rely upon ThreeJS.
+ * If this description and the LBUI3d static members appear multiple times in the docs,
+ * that's a limitation of JSDoc: {@link https://github.com/jsdoc3/jsdoc/issues/515}.
+ * @exports LBUI3d
  */
-
-define(['lbcannonphysicslink', 'lbcannonutil'], 
-function(LBCannon) {
-
-    'use strict';
+    var LBUI3d = LBUI3d || {};
     
-    return LBCannon;
+    return LBUI3d;
 });

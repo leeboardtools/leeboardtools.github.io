@@ -15,15 +15,17 @@
  */
 
 
-require( ['three', 'lbsailsim', 'lbui3d', 'lbutil', 'lbmath', 'lbgeometry', 'lbassets', 'lbsailsimthree'],
-    function(THREE, LBSailSim, LBUI3d, LBUtil, LBMath, LBGeometry, LBAssets) {
+/* global Detector */
+
+require( ['three', 'lbsailsim', 'lbui3d', 'lbutil', 'lbmath', 'lbgeometry', 'lbassets', 'lbsailsimthree', 'lbcameracontrollers'],
+    function(THREE, LBSailSim, LBUI3d, LBUtil, LBMath, LBGeometry, LBAssets, LBSailSimThree, LBCameraControllers) {
         
         
     'use strict';
     
 /**
  * 
- * @param {type} slider
+ * @param {Element} slider
  * @returns {unresolved}
  */    
 function setupSlider(slider) {
@@ -72,6 +74,13 @@ function LBMyApp() {
     
     this.hudWindDirElement = document.getElementById('hud_wind_dir');
     this.hudWindSpeedElement = document.getElementById('hud_wind_speed');
+
+    this.hudDrivingForceElement = document.getElementById('hud_f_driving');
+    this.hudHeelingForceElement = document.getElementById('hud_f_heeling');
+    this.hudFrictionForceElement = document.getElementById('hud_f_friction');
+    this.hudResiduaryForceElement = document.getElementById('hud_f_residuary');
+    this.hudInducedKeelForceElement = document.getElementById('hud_f_induced_keel');
+    this.hudInducedSailForceElement = document.getElementById('hud_f_induced_sail');
     
 
     this.rudderSliderElement = document.getElementById('rudder_slider');
@@ -91,10 +100,6 @@ function LBMyApp() {
     
     this.assetLoader = new LBAssets.Loader();
     
-    // TODO Get rid of windDeg, windForce...
-    this.windDeg = 0;
-    this.windForce = 2;
-    
     this.physicsEngineType = LBSailSim.SailEnvTHREE.CANNON_PHYSICS;
     
     this.updateMouseModeButton();
@@ -107,8 +112,8 @@ LBMyApp.prototype.constructor = LBMyApp;
 
 /**
  * 
- * @param {type} view
- * @param {type} standardView
+ * @param {module:LBUI3d.View3D} view
+ * @param {Number} standardView
  * @returns {undefined}
  */
 LBMyApp.prototype.addNormalView = function(view, standardView) {
@@ -149,7 +154,7 @@ LBMyApp.prototype.addNormalView = function(view, standardView) {
 /**
  * The main initialization function.
  * @override
- * @param {type} mainContainer
+ * @param {Element} mainContainer
  * @returns {undefined}
  */
 LBMyApp.prototype.init = function(mainContainer) {
@@ -166,7 +171,7 @@ LBMyApp.prototype.init = function(mainContainer) {
     this.initSceneEnv();
     this.initSailEnv();
 
-    this.setWindForce(2);
+    this.setWindForce(0);
     
     this.onWindowResize();
 };
@@ -197,7 +202,7 @@ LBMyApp.prototype.initSailEnv = function() {
 
 /**
  * Loads a perticular environment for the sailing environment.
- * @param {type} name
+ * @param {String} name
  * @returns {undefined}
  */
 LBMyApp.prototype.loadEnvironment = function(name) {
@@ -279,20 +284,25 @@ LBMyApp.prototype.closeSplash = function(event) {
         return;
     }
     
+    this.windDeg = 0;
+    this.windForce = 4;
+    //this.windForce = 0;
+
+    this.sailEnv.wind.setAverageFromDeg(this.windDeg);
+    this.sailEnv.wind.setAverageForce(this.windForce);
+    
     document.getElementById('splash').hidden = true;
     document.getElementById('container').style.visibility = "visible";
 
     this.toggleHUDBoat();
     this.toggleHUDWind();
-    
-    this.sailEnv.wind.setAverageForce(4);
 
 };
 
 /**
  * Updates a slider control's value from the current value of a controller.
- * @param {type} controller
- * @param {type} control
+ * @param {module:LBControls.Controller} controller
+ * @param {Element} control
  * @returns {undefined}
  */
 LBMyApp.updateControlFromController = function(controller, control) {
@@ -314,11 +324,11 @@ LBMyApp.updateControlFromController = function(controller, control) {
 
 /**
  * Updates a controller's value from a slider's value.
- * @param {type} control
- * @param {type} value
- * @param {type} min
- * @param {type} max
- * @param {type} controller
+ * @param {Element} control
+ * @param {Number} value
+ * @param {Number} min
+ * @param {Number} max
+ * @param {module:LBControls.Controller} controller
  * @returns {undefined}
  */
 LBMyApp.updateControllerFromControl = function(control, value, min, max, controller) {
@@ -337,10 +347,10 @@ LBMyApp.updateControllerFromControl = function(control, value, min, max, control
 
 /**
  * Handles moving the control value of a controller based upon a key.
- * @param {type} controller
- * @param {type} key
- * @param {type} isDecrease
- * @param {type} control
+ * @param {module:LBControls.Controller} controller
+ * @param {Number} key
+ * @param {Boolean} isDecrease
+ * @param {Element} control
  * @returns {undefined}
  */
 LBMyApp.moveControllerWithKey = function(controller, key, isDecrease, control) {
@@ -366,7 +376,7 @@ LBMyApp.moveControllerWithKey = function(controller, key, isDecrease, control) {
 
 /**
  * 
- * @param {type} event
+ * @param {KeyboardEvent} event
  * @returns {undefined}
  */
 LBMyApp.prototype.onKeyDownEvent = function(event) {
@@ -461,7 +471,7 @@ LBMyApp.prototype.onKeyDownEvent = function(event) {
 
 /**
  * 
- * @param {type} event
+ * @param {KeyboardEvent} event
  * @returns {undefined}
  */
 LBMyApp.prototype.onKeyPressEvent = function(event) {
@@ -480,7 +490,7 @@ LBMyApp.prototype.onKeyPressEvent = function(event) {
 /**
  * The main update function.
  * @override
- * @param {type} dt
+ * @param {Number} dt
  * @returns {undefined}
  */
 LBMyApp.prototype.update = function(dt) {
@@ -490,6 +500,7 @@ LBMyApp.prototype.update = function(dt) {
     
     this.updateHUDBoat();
     this.updateHUDWind();
+    this.updateHUDForces();
 };
 
 /**
@@ -528,6 +539,7 @@ LBMyApp.prototype.updateHUDBoat = function() {
                 if (!LBMath.isLikeZero(this.myBoat.getKnots())) {
                     leewayAngle = this.myBoat.getLeewayDeg(true);
                     if (leewayAngle < 0) {
+                        leewayAngle = -leewayAngle;
                         leewayDir = "S";
                     }
                     else if (leewayAngle > 0) {
@@ -586,6 +598,32 @@ LBMyApp.prototype.updateHUDWind = function() {
     }
 };
 
+/**
+ * Handles updating the Forces HUD.
+ * @returns {undefined}
+ */
+LBMyApp.prototype.updateHUDForces = function() {
+    if (this.isHUDForceOn) {
+        if (this.myBoat) {
+            var sigDigits = 1;
+            this.hudDrivingForceElement.innerText = this.myBoat.getDrivingForceMag().toFixed(0);
+            this.hudHeelingForceElement.innerText = this.myBoat.getHeelingForceMag().toFixed(0);
+            this.hudFrictionForceElement.innerText = this.myBoat.getFrictionalDrag().toFixed(sigDigits);
+            this.hudResiduaryForceElement.innerText = this.myBoat.getResiduaryDrag().toFixed(sigDigits);
+            this.hudInducedKeelForceElement.innerText = this.myBoat.getHydrofoilDrag().toFixed(0);
+            this.hudInducedSailForceElement.innerText = 0;
+        }
+        else {
+            this.hudDrivingForceElement.innerText = 0;
+            this.hudHeelingForceElement.innerText = 0;
+            this.hudFrictionForceElement.innerText = 0;
+            this.hudResiduaryForceElement.innerText = 0;
+            this.hudInducedKeelForceElement.innerText = 0;
+            this.hudInducedSailForceElement.innerText = 0;
+        }
+    }
+};
+
 
 /**
  * Handles updating the frames per second DOM element.
@@ -617,8 +655,8 @@ LBMyApp.prototype.onWindowResize = function() {
 
 /**
  * 
- * @param {type} color
- * @param {type} alpha
+ * @param {String} color
+ * @param {Number} alpha
  * @returns {String}
  */
 function setColorFunctionAlpha(color, alpha) {
@@ -635,7 +673,7 @@ function setColorFunctionAlpha(color, alpha) {
 
 /**
  * 
- * @param {type} force
+ * @param {Number} force
  * @returns {undefined}
  */
 LBMyApp.prototype.setWindForce = function(force) {
@@ -666,7 +704,7 @@ LBMyApp.prototype.windDecrease = function() {
 
 /**
  * 
- * @param {type} dirDeg
+ * @param {Number} dirDeg
  * @returns {undefined}
  */
 LBMyApp.prototype.setWindDirDeg = function(dirDeg) {
@@ -693,7 +731,7 @@ LBMyApp.prototype.windVeer = function() {
 
 
 /**
- * @param {type} dir One of the LBUI3d.CameraController.VIEW_ constants.
+ * @param {Number} dir One of the LBUI3d.CameraController.VIEW_ constants.
  * @returns {undefined}
  */
 LBMyApp.prototype.setCameraView = function(dir) {
@@ -852,9 +890,9 @@ LBMyApp.prototype.toggleWindArrows = function() {
 
 /**
  * 
- * @param {type} element
- * @param {type} property
- * @param {type} onOffset
+ * @param {Element} element
+ * @param {String} property
+ * @param {Number} onOffset
  * @returns {Boolean}
  */
 function toggleByWidth(element, property, onOffset) {
@@ -870,9 +908,9 @@ function toggleByWidth(element, property, onOffset) {
 
 /**
  * 
- * @param {type} element
- * @param {type} property
- * @param {type} onOffset
+ * @param {Element} element
+ * @param {String} property
+ * @param {Number} onOffset
  * @returns {Boolean}
  */
 function toggleByHeight(element, property, onOffset) {
@@ -955,9 +993,9 @@ LBMyApp.prototype.toggleMap = function() {
 
 /**
  * 
- * @param {type} pipElement
- * @param {type} standardView
- * @returns {LBUI3d.View3D}
+ * @param {Element} pipElement
+ * @param {Number} standardView
+ * @returns {module:LBUI3d.View3D}
  */
 LBMyApp.prototype.createPIPView = function(pipElement, standardView) {
     var view = new LBUI3d.View3D(this.mainScene, pipElement);
@@ -1021,7 +1059,7 @@ LBMyApp.prototype.togglePIPLowerRight = function() {
 
 /**
  * 
- * @param {type} container
+ * @param {Element} container
  * @returns {undefined}
  */
 LBMyApp.prototype.toggleFullScreen = function(container) {

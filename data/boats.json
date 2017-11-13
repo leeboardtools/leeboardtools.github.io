@@ -16,7 +16,7 @@
             "debugForces": true,
             "mass": 378,
             "massRadius": 4,    "_comment": "Used for the force arrows",
-            "linearDamping": 0.1,
+            "linearDamping": 0.0,
             "angularDamping": 0.3,
             "velocityTerms": 3,
             "appWindHeight": 2,
@@ -97,7 +97,7 @@
                     "name": "portWindIndicator",
                     "mass": 0,
                     "obj3D": {
-                        "position" : { "x": 1.7429, "y": -0.656, "z": 2.0 },
+                        "position" : { "x": 1.7619, "y": -0.738, "z": 1.5 },
                         "rotation": { "exd": 0, "eyd": 0, "ezd": 0 }
                     },
                     "telltale3D": {
@@ -109,7 +109,7 @@
                     "name": "stbdWindIndicator",
                     "mass": 0,
                     "obj3D": {
-                        "position" : { "x": 1.7429, "y": 0.656, "z": 2.0 },
+                        "position" : { "x": 1.7619, "y": 0.738, "z": 1.5 },
                         "rotation": { "exd": 0, "eyd": 0, "ezd": 0 }
                     },
                     "telltale3D": {
@@ -121,7 +121,7 @@
                     "name": "decWindIndicator",
                     "mass": 0,
                     "obj3D": {
-                        "position" : { "x": 2.0, "y": 0.0, "z": 0.55 },
+                        "position" : { "x": 2.0, "y": 0.0, "z": 0.73 },
                         "rotation": { "exd": 0, "eyd": 0, "ezd": 0 }
                     },
                     "threeModel": "models/tubby/stbd_wind_indicator.json"
@@ -221,7 +221,7 @@
                     "massRadius": 4,
                     "velocityTerms": 3,
                     "obj3D": {
-                        "position" : { "x": 1.7, "y": 0, "z": 1.0 },
+                        "position" : { "x": 1.65, "y": 0, "z": 1.0 },
                         "rotation": { "exd": 0, "eyd": 0, "ezd": 0 }
                         },
                     "threeModel": "models/tubby/mainsail.json",

@@ -21,43 +21,44 @@ function(LBUtil, LBGeometry, LBPhysics, CANNON) {
     'use strict';
 
 /**
- * @namespace LBCannon
+ * Some utilities for working with the {@link http://schteppe.github.io/cannon.js|cannon.js} physics engine.
+ * @exports LBCannonUtil
  */
-var LBCannon = LBCannon || {};
+var LBCannonUtil = LBCannonUtil || {};
 
-LBCannon._workingVector3 = new LBGeometry.Vector3();
+LBCannonUtil._workingVector3 = new LBGeometry.Vector3();
 
 /**
  * A proxy for {@link http://schteppe.github.io/cannon.js/docs/classes/Vec3.html|CANNON.Vec3} that
- * links it to a {@link LBGeometry.Vector3} and utilizes the {@link LBGeometry.Vector3} as the
+ * links it to a {@link module:LBGeometry.Vector3} and utilizes the {@link module:LBGeometry.Vector3} as the
  * underlying storage object.
  * <p>
- * Note that for any given {@link LBGeometry.Vector3} there should be only one proxy.
+ * Note that for any given {@link module:LBGeometry.Vector3} there should be only one proxy.
  * @private
  * @constructor
- * @param {LBGeometry.Vector3} [vector3=new LBGeometry.Vector3()]    The underlying {@link LBGeometry.Vector3} object.
- * @param {LBGeometry.Vector3} [offset=LBGeometry.ORIGIN]  The underlying offset added 
+ * @param {module:LBGeometry.Vector3} [vector3=new LBGeometry.Vector3()]    The underlying {@link module:LBGeometry.Vector3} object.
+ * @param {module:LBGeometry.Vector3} [offset=LBGeometry.ORIGIN]  The underlying offset added 
  * to the underlying vector3 to get the Cannon coordinates.
- * @returns {LBCannon.Vec3Proxy}
+ * @returns {module:LBCannonUtil.Vec3Proxy}
  */
-LBCannon.Vec3Proxy = function(vector3, offset) {
-    this.vector3 = LBCannon._workingVector3;
+LBCannonUtil.Vec3Proxy = function(vector3, offset) {
+    this.vector3 = LBCannonUtil._workingVector3;
     this._cannonOffset = offset || LBGeometry.ORIGIN;
     
     // Need to pass in the current values of this.vector3 so they don't get overwritten.
     CANNON.Vec3.call(this, this.vector3.x, this.vector3.y, this.vector3.z);
 
     /**
-     * The underlying {@link LBGeometry.Vector3}.
+     * The underlying {@link module:LBGeometry.Vector3}.
      */
     this.vector3 = vector3 || new LBGeometry.Vector3();
 
     this.vector3._cannonVec3Proxy = this;
 };
 
-LBCannon.Vec3Proxy.prototype = Object.create(CANNON.Vec3.prototype);
-LBCannon.Vec3Proxy.prototype.constructor = LBCannon.Vec3Proxy;
-Object.defineProperty(LBCannon.Vec3Proxy.prototype, 'x', {
+LBCannonUtil.Vec3Proxy.prototype = Object.create(CANNON.Vec3.prototype);
+LBCannonUtil.Vec3Proxy.prototype.constructor = LBCannonUtil.Vec3Proxy;
+Object.defineProperty(LBCannonUtil.Vec3Proxy.prototype, 'x', {
     get: function() {
         return this.vector3.x + this._cannonOffset.x;
     },
@@ -67,7 +68,7 @@ Object.defineProperty(LBCannon.Vec3Proxy.prototype, 'x', {
     }
 });
 
-Object.defineProperty(LBCannon.Vec3Proxy.prototype, 'y', {
+Object.defineProperty(LBCannonUtil.Vec3Proxy.prototype, 'y', {
     get: function() {
         return this.vector3.y + this._cannonOffset.y;
     },
@@ -77,7 +78,7 @@ Object.defineProperty(LBCannon.Vec3Proxy.prototype, 'y', {
     }
 });
 
-Object.defineProperty(LBCannon.Vec3Proxy.prototype, 'z', {
+Object.defineProperty(LBCannonUtil.Vec3Proxy.prototype, 'z', {
     get: function() {
         return this.vector3.z + this._cannonOffset.z;
     },
@@ -90,10 +91,10 @@ Object.defineProperty(LBCannon.Vec3Proxy.prototype, 'z', {
 
 /**
  * Applies a 4x4 transform matrix to the point.
- * @param {LBGeometry.Matrix4} xfrm The transform matrix.
+ * @param {module:LBGeometry.Matrix4} xfrm The transform matrix.
  * @returns {undefined}
  */
-LBCannon.Vec3Proxy.prototype.transformProxy = function(xfrm) {
+LBCannonUtil.Vec3Proxy.prototype.transformProxy = function(xfrm) {
     this.vector3.applyMatrix4(xfrm);
     this._cannonOffset.applyMatrix4(xfrm);
 };
@@ -103,46 +104,46 @@ LBCannon.Vec3Proxy.prototype.transformProxy = function(xfrm) {
  * to other objects to help with garbage collection.
  * @returns {undefined}
  */
-LBCannon.Vec3Proxy.prototype.destroy = function() {
+LBCannonUtil.Vec3Proxy.prototype.destroy = function() {
     this.vector3 = null;
     this._cannonOffset = null;
 };
 
 
 /**
- * Retrieves the proxy associated with an {@link LBGeometry.Vector3}, creating one
+ * Retrieves the proxy associated with an {@link module:LBGeometry.Vector3}, creating one
  * if necessary.
- * @param {LBGeometry.Vector3} vector3  The vector3 object, may be undefined.
- * @param {LBGeometry.Vector3} [offset=LBGeometry.ORIGIN]  The underlying offset added 
+ * @param {module:LBGeometry.Vector3} vector3  The vector3 object, may be undefined.
+ * @param {module:LBGeometry.Vector3} [offset=LBGeometry.ORIGIN]  The underlying offset added 
  * to the underlying vector3 to get the Cannon coordinates.
- * @returns {undefined|LBCannon.Vec3Proxy}  The proxy, undefined if vector3 is undefined.
+ * @returns {undefined|LBCannonUtil.Vec3Proxy}  The proxy, undefined if vector3 is undefined.
  */
-LBCannon.Vec3Proxy.getProxy = function(vector3, offset) {
+LBCannonUtil.Vec3Proxy.getProxy = function(vector3, offset) {
     if (!vector3) {
         return undefined;
     }
     if (vector3._cannonVec3Proxy) {
         return vector3._cannonVec3Proxy;
     }
-    return new LBCannon.Vec3Proxy(vector3, offset);
+    return new LBCannonUtil.Vec3Proxy(vector3, offset);
 };
 
 
-LBCannon._workingMatrix4A = new LBGeometry.Matrix4();
-LBCannon._workingMatrix4B = new LBGeometry.Matrix4();
+LBCannonUtil._workingMatrix4A = new LBGeometry.Matrix4();
+LBCannonUtil._workingMatrix4B = new LBGeometry.Matrix4();
 
 /**
  * Adds volumes as shapes to a {@link http://schteppe.github.io/cannon.js/docs/classes/Body.html|CANNON.Body}.
- * Once volumes have been added to a body, {@link LBCannon.updateBodyCenterOfMass} should be called
+ * Once volumes have been added to a body, {@link module:LBCannonUtil.updateBodyCenterOfMass} should be called
  * to properly align the body's center of mass with the origin.
  * @param {CANNON.Body} body    The body to add the tetras to.
- * @param {LBVolume.Volume[]} volumes The array of tetras to be added.
- * @param {LBGeometry.Matrix4}  [volToBodyXfrm] If defined the transform to apply to
+ * @param {module:LBVolume.Volume[]} volumes The array of tetras to be added.
+ * @param {module:LBGeometry.Matrix4}  [volToBodyXfrm] If defined the transform to apply to
  * each vertex to bring it to the coordinate system of the body.
  * @returns {CANNON.Body}   body.
  */
-LBCannon.addVolumesToBody = function(body, volumes, volToBodyXfrm) {
-    var offset = LBCannon._workingVector3;
+LBCannonUtil.addVolumesToBody = function(body, volumes, volToBodyXfrm) {
+    var offset = LBCannonUtil._workingVector3;
     
     for (var i = 0; i < volumes.length; ++i) {
         var tv = volumes[i].vertices;
@@ -151,7 +152,7 @@ LBCannon.addVolumesToBody = function(body, volumes, volToBodyXfrm) {
         // on the way CANNON.ConvexPolyhedron#computeNormals() checks the face normals
         // for pointing in the proper direction.
         // What we end up doing is offsetting the vertex coordinates by the centroid
-        // via the {@link LBCannon.Vec3Proxy} before we pass the vertices to
+        // via the {@link module:LBCannonUtil.Vec3Proxy} before we pass the vertices to
         // {@link http://schteppe.github.io/cannon.js/docs/classes/ConvexPolyhedron.hmtl|CANNON.ConvexPolyhedron}
         // this way they have the origin at their center. Then, when we add the
         // shape to the body, we offset the shape by the centroid location.
@@ -162,7 +163,7 @@ LBCannon.addVolumesToBody = function(body, volumes, volToBodyXfrm) {
         var vertices = [];
         for (var j = 0; j < tv.length; ++j) {
             // Unfortunately, because of the center offsets we need to clone each vertex...
-            vertices.push(new LBCannon.Vec3Proxy(tv[j].clone(), centerOffset));
+            vertices.push(new LBCannonUtil.Vec3Proxy(tv[j].clone(), centerOffset));
         }
         if (volToBodyXfrm) {
             vertices.forEach(function(vertex) {
@@ -187,13 +188,13 @@ LBCannon.addVolumesToBody = function(body, volumes, volToBodyXfrm) {
 /**
  * Updates the center of mass of a body. The local origin of the body is the center of mass.
  * @param {CANNON.Body} body    The Cannon body.
- * @param {LBGeometry.Vector3} centerOfMass The position of the center of mass.
+ * @param {module:LBGeometry.Vector3} centerOfMass The position of the center of mass.
  * @param {Number}  [mass]  The mass, if undefined the mass will not be modified.
- * @param {LBGeometry.Matrix3}  [inertia]   The inertia, if undefined the inertia computed
+ * @param {module:LBGeometry.Matrix3}  [inertia]   The inertia, if undefined the inertia computed
  * by the Cannon body will be used.
  * @returns {CANNON.Body}   body.
  */
-LBCannon.updateBodyCenterOfMass = function(body, centerOfMass, mass, inertia) {
+LBCannonUtil.updateBodyCenterOfMass = function(body, centerOfMass, mass, inertia) {
     if (LBUtil.isVar(mass)) {
         body.mass = mass;
     }
@@ -230,33 +231,33 @@ LBCannon.updateBodyCenterOfMass = function(body, centerOfMass, mass, inertia) {
     return body;
 };
 
-LBCannon.addRigidBodyVolumesToBody = function(body, rigidBody) {
-    LBCannon.addVolumesToBody(body, rigidBody.volumes);
+LBCannonUtil.addRigidBodyVolumesToBody = function(body, rigidBody) {
+    LBCannonUtil.addVolumesToBody(body, rigidBody.volumes);
 
-/*    var worldToBody = LBCannon._workingMatrix4A;
+/*    var worldToBody = LBCannonUtil._workingMatrix4A;
     rigidBody.obj3D.matrixWorld.getInverse(worldToBody);
-    var xfrm = LBCannon._workingMatrix4B;
+    var xfrm = LBCannonUtil._workingMatrix4B;
     rigidBody.parts.forEach(function(part) {
         if (!part.volumes || (part.volumes.length === 0)) {
             return;
         }
         xfrm.copy(part.obj3D.matrixWorld);
         xfrm.multiply(worldToBody);
-        LBCannon.addVolumesToBody(body, part.volumes, xfrm);
+        LBCannonUtil.addVolumesToBody(body, part.volumes, xfrm);
     });
 */    
-    LBCannon.updateBodyCenterOfMass(body, rigidBody.centerOfMass, rigidBody.mass, rigidBody.momentInertia);    
+    LBCannonUtil.updateBodyCenterOfMass(body, rigidBody.centerOfMass, rigidBody.mass, rigidBody.momentInertia);    
 };
 
-LBCannon.updateBodyFromRigidBodyVolumes = function(body, rigidBody) {
+LBCannonUtil.updateBodyFromRigidBodyVolumes = function(body, rigidBody) {
     if (rigidBody.linearDamping !== undefined) {
         body.linearDamping = rigidBody.linearDamping;
     }
     if (rigidBody.angularDamping !== undefined) {
         body.angularDamping = rigidBody.angularDamping;
     }
-//    LBCannon.updateBodyCenterOfMass(body, rigidBody.centerOfMass, rigidBody.mass);//, rigidBody.momentInertia);    
+//    LBCannonUtil.updateBodyCenterOfMass(body, rigidBody.centerOfMass, rigidBody.mass);//, rigidBody.momentInertia);    
 };
 
-return LBCannon;
+return LBCannonUtil;
 });

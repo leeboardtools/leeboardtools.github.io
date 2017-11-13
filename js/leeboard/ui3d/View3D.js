@@ -17,28 +17,35 @@
 
 /* global THREE, LBUI3d */
 define(['three', 'lbscene3d', 'lbcamera', 'lbcameracontrollers'], 
-function(THREE, LBUI3d, LBCamera) {
+function(THREE, LBUI3d, LBCamera, LBCameraControllers) {
 
     'use strict';
 
+/**
+ * My 3D application framework module, these classes all rely upon ThreeJS.
+ * If this description and the LBUI3d static members appear multiple times in the docs,
+ * that's a limitation of JSDoc: {@link https://github.com/jsdoc3/jsdoc/issues/515}.
+ * @exports LBUI3d
+ */
+var LBUI3d = LBUI3d || {};
 
 /**
  * A view on a scene. The view provides the association between a DOM element to display 
  * the view of a scene into, and a camera to view through.
  * <p>
- * Views also provide support for one or more {@link LBUI3d.CameraController}s, which are
+ * Views also provide support for one or more {@link module:LBUI3d.CameraController}s, which are
  * used to control the camera within the view.
  * @constructor
- * @param {LBUI3d.Scene3D} scene3D  The scene being viewed.
+ * @param {module:LBUI3d.Scene3D} scene3D  The scene being viewed.
  * @param {Object} container    The DOM container to be displayed in.
- * @param {LBCamera.Camera} [camera]  If defined, the camera for the view. 
- * @param {type} [renderer] If defined, the renderer to use.
- * @returns {LBUI3d.View3D}
+ * @param {module:LBCamera.Camera} [camera]  If defined, the camera for the view. 
+ * @param {THREE.Renderer} [renderer] If defined, the renderer to use.
+ * @returns {module:LBUI3d.View3D}
  */
 LBUI3d.View3D = function(scene3D, container, camera, renderer) {
     /**
      * The scene this views.
-     * @member {@link LBUI3d.Scene3D}
+     * @member {module:LBUI3d.Scene3D}
      */
     this.scene3D = scene3D;
     
@@ -48,13 +55,14 @@ LBUI3d.View3D = function(scene3D, container, camera, renderer) {
     var height = container.clientHeight;
     
     if (!camera) {
-        camera = new LBCamera.PerspectiveCamera(50, width / height, 0.1, 10000);
+        // 64000 m is 40 miles...
+        camera = new LBCamera.PerspectiveCamera(50, width / height, 0.1, 64000);
         camera.position.z = 5;
     }
     
     /**
      * The camera used to view the scene.
-     * @member {@link LBCamera.Camera}
+     * @member {module:LBCamera.Camera}
      */
     this.camera = camera;
     
@@ -62,7 +70,7 @@ LBUI3d.View3D = function(scene3D, container, camera, renderer) {
     
     /**
      * The camera controllers.
-     * @member {@link LBUI3d.CameraController[]}
+     * @member {module:LBUI3d.CameraController[]}
      */
     this.cameraControllers = [];
     
@@ -102,7 +110,7 @@ LBUI3d.View3D = function(scene3D, container, camera, renderer) {
     
     /**
      * The current mouse mode.
-     * @member {LBUI3d.View3D.MOUSE_ROTATE_MODE|LBUI3d.View3D.MOUSE_PAN_MODE}
+     * @member {module:LBUI3d.View3D.MOUSE_ROTATE_MODE|LBUI3d.View3D.MOUSE_PAN_MODE}
      */
     this.mouseMode = LBUI3d.View3D.MOUSE_ROTATE_MODE;
     this.setRotateMode();
@@ -118,8 +126,8 @@ LBUI3d.View3D.prototype = {
 
 /**
  * Adds a camera controller to the view.
- * @param {LBUI3d.CameraController} controller  The controller to add.
- * @returns {LBUI3d.View3D} this.
+ * @param {module:LBUI3d.CameraController} controller  The controller to add.
+ * @returns {module:LBUI3d.View3D} this.
  */
 LBUI3d.View3D.prototype.addCameraController = function(controller) {
     this.cameraControllers.push(controller);
@@ -133,7 +141,7 @@ LBUI3d.View3D.prototype.addCameraController = function(controller) {
 /**
  * Sets the active camera controller. The active camera controller has its event
  * handlers installed in the DOM container.
- * @param {LBUI3d.CameraController} controller  The controller, may be null or undefined.
+ * @param {module:LBUI3d.CameraController} controller  The controller, may be null or undefined.
  */
 LBUI3d.View3D.prototype.setActiveCameraController = function(controller) {
     if (this.activeCameraController !== controller) {
@@ -151,8 +159,8 @@ LBUI3d.View3D.prototype.setActiveCameraController = function(controller) {
 
 /**
  * Sets the mouse mode for the camera controllers.
- * @param {LBUI3d.View3D.MOUSE_ROTATE_MODE|LBUI3d.View3D.MOUSE_PAN_MODE} mode The mouse mode.
- * @returns {LBUI3d.View3D} this.
+ * @param {module:LBUI3d.View3D.MOUSE_ROTATE_MODE|LBUI3d.View3D.MOUSE_PAN_MODE} mode The mouse mode.
+ * @returns {module:LBUI3d.View3D} this.
  */
 LBUI3d.View3D.prototype.setMouseMode = function(mode) {
     if (this.mouseMode !== mode) {
@@ -180,7 +188,7 @@ LBUI3d.View3D.prototype.setRotateMode = function() {
 };
 
 /**
- * Called from the owner {@link LBUI3d.App3D} every update cycle to have the view
+ * Called from the owner {@link module:LBUI3d.App3D} every update cycle to have the view
  * pre-render itself.
  * @protected
  * @param {Number} dt   The elapsed seconds since the last call call.
@@ -198,7 +206,7 @@ LBUI3d.View3D.prototype.update = function(dt) {
 };
 
 /**
- * Called from the owner {@link LBUI3d.App3D} every render cycle to have the view
+ * Called from the owner {@link module:LBUI3d.App3D} every render cycle to have the view
  * render itself.
  * @protected
  * @param {Number} dt   The elapsed seconds since the last render call.
@@ -213,7 +221,7 @@ LBUI3d.View3D.prototype.render = function(dt) {
 };
 
 /**
- * Called by {@link LBUI3d.App3D}'s window resize event handler, updates the camera for the DOM container's size.
+ * Called by {@link module:LBUI3d.App3D}'s window resize event handler, updates the camera for the DOM container's size.
  * @protected
  */
 LBUI3d.View3D.prototype.onWindowResize = function() {
