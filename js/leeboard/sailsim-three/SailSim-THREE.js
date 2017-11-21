@@ -15,8 +15,8 @@
  */
 
 
-define(['lbsailsim', 'lbcannonphysicslink', 'three', 'lbgeometry', 'lbassets', 'lbui3d', 'lbwater3d', 'lbsky3d', 'lbwakes3d', 'lbwind3d', 'tween'], 
-function(LBSailSim, LBCannonPhysicsLink, THREE, LBGeometry, LBAssets, LBUI3d, LBWater3D, LBSky3D, LBWakes3D, LBWind3D, TWEEN) {
+define(['lbsailsim', 'lbcannonphysicslink', 'three', 'lbgeometry', 'lbassets', 'lbrandom', 'lbui3d', 'lbwater3d', 'lbsky3d', 'lbwakes3d', 'lbwind3d', 'tween'], 
+function(LBSailSim, LBCannonPhysicsLink, THREE, LBGeometry, LBAssets, LBRandom, LBUI3d, LBWater3D, LBSky3D, LBWakes3D, LBWind3D, TWEEN) {
     
     'use strict';
 
@@ -47,9 +47,14 @@ LBSailSim.SailEnvTHREE = function(app3D, mainView, physicsType, assetLoader) {
             break;
     }
     
+    this.physicsLink.addForceGenerator(this.buoyancyGenerator);
+    this.physicsLink.addForceGenerator(this.dampingGenerator);
+    
     this.water3D = new LBSailSim.Water3D(app3D.mainScene, this);
     this.wakes3D = new LBSailSim.Wakes3D(app3D.mainScene, this);
     this.sky3D = new LBSailSim.Sky3D(app3D.mainScene, this);
+    
+    this.dtRunningAvg = new LBRandom.RunningAverage(60);
     
     // For testing...
     //this.water3D.waterMesh.visible = false;
@@ -91,8 +96,6 @@ LBSailSim.SailEnvTHREE.prototype.floatingObjectLoaded = function(data, rigidBody
             LBSailSim.SailEnvTHREE.updateThreeModelFromRigidBody(rigidBody);
         });
     }
-    //this.physicsLink.addRigidBody(rigidBody, data);
-    this.physicsLink.addFixedObject(rigidBody);
 };
 
 
@@ -192,8 +195,12 @@ LBSailSim.SailEnvTHREE.prototype._boatReturned = function(boat) {
  */
 LBSailSim.SailEnvTHREE.prototype.update = function(dt) {
     dt = dt || this.physicsLink.timeStep();
+    if (dt > 0.25) {
+        dt = 0.25;
+    }
     
-    dt = this.physicsLink.timeStep();
+    dt = this.dtRunningAvg.addValue(dt);
+    //dt = this.physicsLink.timeStep();
     
     TWEEN.update(this.app3D.runMillisecs);
     LBSailSim.Env.prototype.update.call(this, dt);

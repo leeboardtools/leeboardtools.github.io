@@ -33,6 +33,7 @@ var LBPhysicsLink = LBPhysics;
  */
 LBPhysicsLink.Link = function() {    
     this.rigidBodies = [];
+    this.forceGenerators = [];
     
     this.views = [];
     
@@ -136,6 +137,31 @@ LBPhysicsLink.Link.prototype = {
     _rigidBodyRemoved: function(rigidBody) {
     },
     
+
+    /**
+     * Adds a {@link module:LBForces.ForceGenerator} to the manager.
+     * @param {module:LBForces.Generator} generator    The force generator.
+     * @returns {LBPhysicsLink.Link}    this.
+     */
+    addForceGenerator: function(generator) {
+        this.forceGenerators.push(generator);
+        return this;
+    },
+    
+    /**
+     * Removes a force generator from the manager.
+     * @param {module:LBForces.Generator} generator    The force generator.
+     * @returns {Boolean}   true if the generator was removed, false if it was not part of the manager.
+     */
+    removeForceGenerator: function(generator) {
+        var index = this.forceGenerators.indexOf(generator);
+        if (index >= 0) {
+            this.forceGenerators.splice(index, 1);
+            return true;
+        }
+        return false;
+    },
+    
     
     /**
      * Adds a view to the manager. Views should have the following methods:
@@ -188,6 +214,29 @@ LBPhysicsLink.Link.prototype = {
      * @returns {undefined}
      */
     update: function(dt) {
+        this.rigidBodies.forEach(function(rigidBody) {
+            rigidBody.clearForces();
+            this._updateRigidBodyForces(rigidBody, dt);
+            
+        }, this);
+        
+        this.forceGenerators.forEach(function(generator) {
+            generator.update(dt);
+        });
+    },
+    
+    /**
+     * Called from update() for each rigid body to have the body update any forces
+     * generated from itself.
+     * @param {module:LBPhysics.RigidBody} rigidBody    The rigid body.
+     * @param {Number} dt   The time step.
+     * @returns {undefined}
+     */
+    _updateRigidBodyForces: function(rigidBody, dt) {
+        rigidBody.updateCoords(dt);
+        if (rigidBody.updateForces) {
+            rigidBody.updateForces(dt);
+        }
     },
     
     /**
