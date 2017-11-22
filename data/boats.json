@@ -2,7 +2,48 @@
     "boats": [
         {
             "typeName": "Tubby",
-            "instances": [ "TubbyA", "TubbyB", "TubbyC" ],
+            "instances": [ 
+                {   
+                    "name": "TubbyA",
+                    "sails": {
+                        "mainsail": {
+                            "color": "yellow"
+                        }
+                    }
+                },
+                {   
+                    "name": "TubbyB",
+                    "sails": {
+                        "mainsail": {
+                            "color": "blue"
+                        }
+                    }
+                },
+                {
+                    "name": "TubbyC",
+                    "sails": {
+                        "mainsail": {
+                            "color": "green"
+                        }
+                    }
+                },
+                {
+                    "name": "TubbyD",
+                    "sails": {
+                        "mainsail": {
+                            "color": "white"
+                        }
+                    }
+                },
+                {
+                    "name": "TubbyE",
+                    "sails": {
+                        "mainsail": {
+                            "color": "red"
+                        }
+                    }
+                }
+            ],
             "phaser": {
                 "sprite": {
                     "key": "tubby",
