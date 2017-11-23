@@ -78,6 +78,12 @@ LBSailSim.Env = function(assetLoader) {
      */
     this.callbacks = [];
     
+    /**
+     * The main simulation time.
+     * @member {Number}
+     */
+    this.currentTime = 0;
+    
     
     this.loadCoordinator = new LBAssets.MultiLoadCoordinator();
     
@@ -141,6 +147,9 @@ LBSailSim.Env.prototype = {
         this.boatDatas = {};
         this.boatsByType = {};
         
+        // TODO:
+        // We need to remove the various objects from the physics link...
+        
         this.objectDefs = {};
         this.floatingObjects.length = 0;
         this.floatingObjectsByClassification = {};
@@ -155,6 +164,7 @@ LBSailSim.Env.prototype = {
      */
     loadEnv: function(name, onLoaded, onError) {
         var me = this;
+        this.name = name;
         var fileName = 'data/env/' + name + '.json';
         this.assetLoader.loadJSON(name, fileName, function(data) {
             data = LBAssets.expandIncludes(data);
@@ -240,9 +250,9 @@ LBSailSim.Env.prototype = {
         
         var rigidBody = LBPhysics.RigidBody.createFromData(objectDef);        
         this.floatingObjects.push(rigidBody);
+        rigidBody.name = data.name;
         
         LBForces.Buoyancy.loadRigidBodySettings(rigidBody, objectDef);
-
         if (data.pos) {
             LBGeometry.loadVector3(data.pos, rigidBody.obj3D.position);
         }
@@ -319,6 +329,21 @@ LBSailSim.Env.prototype = {
         }
     },
     
+    
+    /**
+     * Retrieves the floating object with a given name.
+     * @param {String} name The name of the desired object.
+     * @returns {module:LBPhysics.RigidBody} The floating object with the name, undefined if none found.
+     */
+    getFloatingObject: function(name) {
+        var length = this.floatingObjects.length;
+        for (var i = 0; i < length; ++i) {
+            if (this.floatingObjects[i].name === name) {
+                return this.floatingObjects[i];
+            }
+        }
+        return undefined;
+    },
 
     //
     // Floating object scenario:
@@ -650,6 +675,8 @@ LBSailSim.Env.prototype = {
         this.boundaries.update(dt);
         this.wind.update(dt);
         this.water.update(dt);
+        
+        this.currentTime += dt;
         return this;
     }
 };
