@@ -76,6 +76,48 @@ LBUtil.bsearch = function(array, value) {
     return low;
 };
 
+/**
+ * Function based binary search algorithm.
+ * @param {Function} getValueCallback   The function called to retrieve the value at
+ * a given index. It has the signature:
+ * <pre><code>
+ *      function getValueCallback(index) {
+ *          return values[index];
+ *      }
+ * </code></pre>
+ * The function must satisfy getValueCallback(i) &lt; getValueCallback(i+1)
+ * @param {Number} count    The number of available values.
+ * @param {Number} value    The value to search for.
+ * @returns {Number}    The index of the first element that is &le; value, if
+ * value is &lt; getValueCallback(0) then -1 is returned.
+ */
+LBUtil.bsearchFunction = function(getValueCallback, count, value) {
+    var value0 = getValueCallback(0);
+    if (value < value0) {
+        return -1;
+    }
+
+    var lastIndex = count - 1;
+    var valueLast = getValueCallback(lastIndex);
+    if (value >= valueLast) {
+        return lastIndex;
+    }
+
+    var low = 0;
+    var high = lastIndex;
+    while ((high - low) > 1) {
+        var mid = (low + high) >> 1;
+        if (value < getValueCallback(mid)) {
+            high = mid;
+        }
+        else {
+            low = mid;
+        }
+    }
+
+    return low;
+};
+
 
 /**
  * Copies properties that are common to two objects from one object to another.
@@ -388,7 +430,7 @@ LBUtil.RollingBuffer.prototype = {
     },
     
     /**
-     * Retrieves the object at a given index. Index values are &ge; 0 and &lt; {@link module:LBUtil.RollingBuffer#getCurrentSize()},
+     * Retrieves the object at a given index. Index values are &ge; 0 and &lt; {@link module:LBUtil.RollingBuffer#getCurrentSize},
      * with the value at index 0 the oldest value in the buffer.
      * @param {Number} index    The index of interest.
      * @returns {Object}    The object at the index.
@@ -398,7 +440,7 @@ LBUtil.RollingBuffer.prototype = {
     },
     
     /**
-     * Sets the object at a given index. Index values are &ge; 0 and &lt; {@link module:LBUtil.RollingBuffer#getCurrentSize()},
+     * Sets the object at a given index. Index values are &ge; 0 and &lt; {@link module:LBUtil.RollingBuffer#getCurrentSize},
      * with the value at index 0 the oldest value in the buffer.
      * @param {Number} index    The index of interest.
      * @param {Object} value    The value to assign to the index.
@@ -415,10 +457,106 @@ LBUtil.RollingBuffer.prototype = {
             index -= this._buffer.length;
         }
         return index;
-    },    
+    },
+    
+    
+    /**
+     * Removes the buffer from use.
+     * @returns {undefined}
+     */
+    destroy: function() {
+        if (this._buffer) {
+            this._buffer.length = 0;
+            this._buffer = null;
+        }
+    },
     
     constructor: LBUtil.RollingBuffer
 };
+
+
+/**
+ * A simple class for managing a pool of objects. Objects are obtained via
+ * {@link module:LBUtil.Pool#get}, and when done are returned to the pool via
+ * {@link module:LBUtil.Pool#release}.
+ * @param {Function} allocator  The function called to allocate a new object.
+ * @returns {module.LBUtil.Pool}
+ */
+LBUtil.Pool = function(allocator) {
+    this.allocator = allocator;
+    this._first = null;
+    
+    this._allocatedCount = 0;
+    this._returnedCount = 0;
+    this._recycledCount = 0;
+};
+
+LBUtil.Pool.prototype = {
+    /**
+     * Retrieves an object from the pool, allocating one if the pool is empty.
+     * @returns {Object}    The object.
+     */
+    get: function() {
+        var obj;
+        if (this._first) {
+            obj = this._first;
+            this._first = obj._lbPoolNext;
+            ++this._recycledCount;
+        }
+        else {
+            obj = this.allocator();
+            ++this._allocatedCount;
+        }
+        
+        obj._lbPool = this;
+        obj._lbPoolNext = null;
+        return obj;
+    },
+    
+    /**
+     * Returns an object to the pool.
+     * @param {Object} obj  The object.
+     * @returns {undefined}
+     */
+    release: function(obj) {
+        if ((obj._lbPool === this) && !obj._lbPoolNext) {
+            obj._lbPoolNext = this._first;
+            this._first = obj;
+            ++this._returnedCount;
+        }
+    },
+    
+    /**
+     * Marks an object such that calling {@link module:LBUtil.Pool#release} will not
+     * return it to the pool. Call this when an object is being used outside of the
+     * scope that obtained the object from the pool, so the object does not get
+     * accidentally returned to the pool.
+     * @param {Object} obj  The object.
+     * @returns {Object}    obj.
+     */
+    removeFromPool: function(obj) {
+        obj._lbPool = undefined;
+        return obj;
+    },
+    
+    /**
+     * Removes all the objects currently in the pool. If the object has a destroy
+     * method, that is called.
+     * @returns {undefined}
+     */
+    destroy: function() {
+        while (this._first) {
+            var obj = this._first;
+            if (typeof obj.destroy === 'function') {
+                obj.destroy();
+            }
+            this._first = this._first._lbPoolNext;
+        }
+    },
+    
+    constructor: LBUtil.Pool
+};
+
 
 /**
  * Helper for toggling full-screen mode.

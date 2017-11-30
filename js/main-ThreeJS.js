@@ -17,8 +17,8 @@
 
 /* global Detector */
 
-require( ['lbui3d', 'lbutil', 'lbmath', 'lbassets', 'lbsailsimthree', 'lbracing'],
-    function(LBUI3d, LBUtil, LBMath, LBAssets, LBSailSim, LBRacing) {
+require( ['lbui3d', 'lbutil', 'lbdebug', 'lbmath', 'lbassets', 'lbsailsimthree', 'lbracing'],
+    function(LBUI3d, LBUtil, LBDebug, LBMath, LBAssets, LBSailSim, LBRacing) {
         
         
     'use strict';
@@ -71,6 +71,8 @@ function LBMyApp() {
         rudderDeg: 30
     });
     
+    // TEST!!!
+    //this.otherBoats.length = 0;
     
     var mainViewContainer = document.getElementById('main_view');
     this.mainView = new LBUI3d.View3D(this.mainScene, mainViewContainer);
@@ -128,6 +130,9 @@ function LBMyApp() {
     
     this.updateMouseModeButton();
     this.updateCameraViewButton();
+    
+    // TEST!!!
+    this.debugTimeRecorder = new LBDebug.TimeRecorder();
 };
 
 LBMyApp.prototype = Object.create(LBUI3d.App3D.prototype);
@@ -545,12 +550,16 @@ LBMyApp.prototype.update = function(dt) {
     this.sailEnv.update(dt);
     
     if (this.race) {
+        this.debugTimeRecorder.start('race.update');
         this.race.update(dt);
+        this.debugTimeRecorder.end('race.update');
     }
     
+    this.debugTimeRecorder.start('updateHUD');
     this.updateHUDBoat();
     this.updateHUDWind();
     this.updateHUDForces();
+    this.debugTimeRecorder.end('updateHUD');
 };
 
 /**

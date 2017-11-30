@@ -72,6 +72,10 @@ LBPhysics.Resultant3D = function(force, moment, position) {
 
 LBPhysics.Resultant3D._workingLine3 = new LBGeometry.Line3();
 LBPhysics.Resultant3D._workingPos = new LBGeometry.Vector3();
+LBPhysics.Resultant3D._workingSub = new LBGeometry.Vector3();
+LBPhysics.Resultant3D._workingMoment = new LBGeometry.Vector3();
+LBPhysics.Resultant3D._workingForceDir = new LBGeometry.Vector3();
+LBPhysics.Resultant3D._workingR = new LBGeometry.Vector3();
 
 LBPhysics.Resultant3D.prototype = {
     /**
@@ -106,8 +110,8 @@ LBPhysics.Resultant3D.prototype = {
      */
     addForce: function(force, position) {
         if (!this.applPoint.equals(position)) {
-            var arm = LBGeometry.subVectors3(position, this.applPoint);
-            var moment = LBPhysics.calcMoment(force, arm);
+            var arm = LBGeometry.subVectors3(position, this.applPoint, LBPhysics.Resultant3D._workingSub);
+            var moment = LBPhysics.calcMoment(force, arm, LBPhysics.Resultant3D._workingMoment);
             this.moment.add(moment);
         }
         
@@ -122,8 +126,8 @@ LBPhysics.Resultant3D.prototype = {
      * @returns {module:LBPhysics.Resultant3D} this.
      */
     addResultant: function(other) {
-        var deltaPos = LBGeometry.subVectors3(other.applPoint, this.applPoint);
-        var moment = LBPhysics.calcMoment(other.force, deltaPos);
+        var deltaPos = LBGeometry.subVectors3(other.applPoint, this.applPoint, LBPhysics.Resultant3D._workingSub);
+        var moment = LBPhysics.calcMoment(other.force, deltaPos, LBPhysics.Resultant3D._workingMoment);
         moment.add(other.moment);
         
         this.moment.add(moment);
@@ -138,8 +142,8 @@ LBPhysics.Resultant3D.prototype = {
      */
     moveApplPoint: function(position) {
         if (!this.applPoint.equals(position)) {
-            var r = LBGeometry.subVectors3(this.applPoint, position);
-            var moment = LBPhysics.calcMoment(this.force, r);
+            var r = LBGeometry.subVectors3(this.applPoint, position, LBPhysics.Resultant3D._workingSub);
+            var moment = LBPhysics.calcMoment(this.force, r, LBPhysics.Resultant3D._workingMoment);
             this.moment.add(moment);
             this.applPoint.copy(position);
         }
@@ -170,17 +174,19 @@ LBPhysics.Resultant3D.prototype = {
         
         // Find the parallel moment.
         var normScale = 1./Math.sqrt(forceMagSq);
-        var forceDir = new LBGeometry.Vector3(this.force.x * normScale, this.force.y * normScale, this.force.z * normScale);        
+        var forceDir = LBPhysics.Resultant3D._workingForceDir.set(this.force.x * normScale, this.force.y * normScale, this.force.z * normScale);        
         var pMoment = forceDir.multiplyScalar(this.moment.dot(forceDir));
 
         // And then the perpendicular moment, which is moment - parallel moment.
-        var moment = LBGeometry.subVectors3(this.moment, pMoment);
+        // Just reusing forceDir for storage...
+        var moment = LBGeometry.subVectors3(this.moment, pMoment, forceDir);
         if (LBGeometry.isVectorLikeZero(moment)) {
             // Already a wrench...
             return this;
         }
         
-        var r = LBGeometry.crossVectors3(moment, this.force);
+        // Just reusing forceDir for storage...
+        var r = LBGeometry.crossVectors3(moment, this.force, LBPhysics.Resultant3D._workingR);
         r.multiplyScalar(-1./forceMagSq);
         
         this.applPoint.add(r);
@@ -1552,6 +1558,203 @@ LBPhysics.RigidBody.getRigidBodiesWithName = function(rigidBodies, name, store) 
     });
     
     return store;
+};
+
+
+/**
+ * A trajectory records a given number of position/velocity/orientation states at different
+ * points in time.
+ * @constructor
+ * @param {Number} [pointsToRecordCount=1000]   The number of points to keep track of.
+ * @returns {module:LBPhysics.Trajectory}
+ */
+LBPhysics.Trajectory = function(pointsToRecordCount) {
+    pointsToRecordCount = (pointsToRecordCount > 0) ? pointsToRecordCount : 1000;
+    
+    this.stateBuffer = new LBUtil.RollingBuffer(pointsToRecordCount);
+    this.currentTime = 0;
+    
+    this.splineCalculator = new LBMath.CatmullRomCalculator();
+};
+
+var _trajectoryInterpolationStates = [];
+LBPhysics.Trajectory.prototype = {
+    /**
+     * Resets the trajectory to being empty.
+     * @param {Number} [currentTime=0]  The baseline for the simulation time.
+     * @returns {module:LBPhysics.Trajectory}   this.
+     */
+    reset: function(currentTime) {
+        this.stateBuffer.clear();
+        this.currentTime = currentTime || 0;
+    },
+    
+    /**
+     * Updates the trajectory given a rigid body's state.
+     * @param {Number} dt   The time step.
+     * @param {module:LBPhysics.RigidBody} rigidBody    The rigid body this is for.
+     * @returns {module:LBPhysics.Trajectory}   this.
+     */
+    updateRigidBodyTrajectory: function(dt, rigidBody) {
+        return this.updateTrajectory(dt, rigidBody.obj3D.position, rigidBody.worldLinearVelocity, rigidBody.obj3D.quaternion);
+    },
+    
+    /**
+     * Updates the trajectory with a given state.
+     * @param {Number} dt   The time step.
+     * @param {module:LBGeometry.Vector3} position  The object position.
+     * @param {module:LBGeometry.Vector3} velocity  The object velocity.
+     * @param {module:LBGeometry.Quaternion} quaternion The object's orientation as a quaternion.
+     * @returns {module:LBPhysics.Trajectory}   this.
+     */
+    updateTrajectory: function(dt, position, velocity, quaternion) {
+        var state;
+        if (this.stateBuffer.isFull()) {
+            state = this.stateBuffer.popOldest();
+        }
+        else {
+            state = this._createState();
+        }
+        
+        this.currentTime += dt;
+        
+        this._recordState(state, dt, position, velocity, quaternion);
+        this.stateBuffer.push(state);
+        
+        return this;
+    },
+    
+    _createState: function() {
+        return {
+            position: new LBGeometry.Vector3(),
+            travelDir: new LBGeometry.Vector3(),
+            quaternion: new LBGeometry.Quaternion()
+        };
+    },
+    
+    _recordState: function(state, dt, position, velocity, quaternion) {
+        state.time = this.currentTime;
+        state.position.copy(position);
+        state.travelDir.copy(velocity);
+        state.speed = velocity.length();
+        
+        if (LBMath.isLikeZero(state.speed)) {
+            state.speed = 0;
+            state.travelDir.normalize();
+        }
+        else {
+            state.travelDir.divideScalar(state.speed);
+        }
+        
+        state.quaternion.copy(quaternion);
+    },
+    
+    
+    /**
+     * Determines if there are enough states available to call {@link module:LBPhysics.Trajectory#getPastState}.
+     * @returns {Boolean}   True if there are enough states.
+     */
+    areStatesAvailable: function() {
+        return this.stateBuffer.getCurrentSize() >= 4;
+    },
+    
+    /**
+     * Retrieves an interpolated state at a given time offset from the last recorded time.
+     * @param {Number} timeOffset   The number of seconds back from the current time offset.
+     * @param {Object} [store]  If defined the object to receive the state information.
+     * This object has at the minimum the following:
+     * <pre><code>
+     *      position: new LBGeometry.Vector3(),
+     *      quaternion: new LBGeometry.Quaternion(),
+     *      travelDir:  new LBGeometry.Vector3(),
+     *      time:   1.234,
+     *      speed:  2.34,
+     * </code></pre>
+     * @returns {Object}    The object containing the state information, undefined if the time
+     * is out of range.
+     */
+    getPastState: function(timeOffset, store) {
+        var desiredTime = this.currentTime - timeOffset;
+        if ((desiredTime < this.stateBuffer.getOldest().time) || (this.stateBuffer.getCurrentSize() < 4)) {
+            return undefined;
+        }
+        
+        var buffer = this.stateBuffer;
+        var index = LBUtil.bsearchFunction(function(index) {
+                    return buffer.get(index).time;
+                },
+                buffer.getCurrentSize(),
+                desiredTime);
+        
+        store = store || this._createState();
+        
+        var baseState = buffer.get(index);
+        var dt = desiredTime - baseState.time;
+        if (LBMath.isLikeZero(dt)) {
+            this._copyState(store, baseState);
+        }
+        else {
+            var baseIndex = index - 1;
+            if (baseIndex < 0) {
+                baseIndex = 0;
+            }
+            var states = _trajectoryInterpolationStates;
+            states[0] = buffer.get(baseIndex++);
+            states[1] = buffer.get(baseIndex++);
+            states[2] = buffer.get(baseIndex++);
+            states[3] = buffer.get(baseIndex++);
+            
+            this.splineCalculator.setTs(desiredTime, states[0].time, states[1].time, states[2].time, states[3].time);
+            this._interpolateState(this.splineCalculator, states, store);
+        }
+        
+        store.time = desiredTime;
+        return store;
+    },
+    
+    _interpolateState: function(splineCalculator, states, state) {
+        var x = splineCalculator.calc(states[0].position.x, states[1].position.x, states[2].position.x, states[3].position.x);
+        var y = splineCalculator.calc(states[0].position.y, states[1].position.y, states[2].position.y, states[3].position.y);
+        var z = splineCalculator.calc(states[0].position.z, states[1].position.z, states[2].position.z, states[3].position.z);
+        state.position.set(x, y, z);
+        
+        x = splineCalculator.calc(states[0].travelDir.x, states[1].travelDir.x, states[2].travelDir.x, states[3].travelDir.x);
+        y = splineCalculator.calc(states[0].travelDir.y, states[1].travelDir.y, states[2].travelDir.y, states[3].travelDir.y);
+        z = splineCalculator.calc(states[0].travelDir.z, states[1].travelDir.z, states[2].travelDir.z, states[3].travelDir.z);
+        state.travelDir.set(x, y, z)
+                .normalize();
+        
+        x = splineCalculator.calc(states[0].quaternion.x, states[1].quaternion.x, states[2].quaternion.x, states[3].quaternion.x);
+        y = splineCalculator.calc(states[0].quaternion.y, states[1].quaternion.y, states[2].quaternion.y, states[3].quaternion.y);
+        z = splineCalculator.calc(states[0].quaternion.z, states[1].quaternion.z, states[2].quaternion.z, states[3].quaternion.z);
+        var w = splineCalculator.calc(states[0].quaternion.w, states[1].quaternion.w, states[2].quaternion.w, states[3].quaternion.w);
+        state.quaternion.set(x, y, z, w)
+                .normalize();
+        
+        state.speed = splineCalculator.calc(states[0].speed, states[1].speed, states[2].speed, states[3].speed);
+    },
+    
+    _copyState: function(dstState, srcState) {
+        dstState.position.copy(srcState.position);
+        dstState.travelDir.copy(srcState.travelDir);
+        dstState.quaternion.copy(srcState.quaternion);
+        dstState.speed = srcState.speed;
+        
+        return dstState;
+    },
+    
+    /**
+     * Removes the trajectory from use.
+     * @returns {undefined}
+     */
+    destroy: function() {
+        if (this.stateBuffer) {
+            this.stateBuffer.destroy();
+            this.stateBuffer = null;
+        }
+    },
+    
+    constructor: LBPhysics.Trajectory
 };
 
 return LBPhysics;
