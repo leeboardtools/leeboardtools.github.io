@@ -90,6 +90,13 @@ LBMath.isNearEqual = function(a, b, tolerance) {
     else if (LBMath.isLikeZero(b)) {
         return false;
     }
+    else if (!Number.isFinite(a)) {
+        // Do want to keep track of the sign.
+        return a === b;
+    }
+    else if (!Number.isFinite(b)) {
+        return false;
+    }
     
     var scale = Math.pow(10., -Math.log10(Math.abs(a)));
     var scaledA = a * scale;
@@ -588,61 +595,27 @@ LBMath.finiteDiffBackFirst.MAX_TERMS = 5;
 
 
 /**
- * A helper class that can be used to apply Catmull-Rom spline interpolation to multiple values
- * for a given t.
- * @constructor
- * @returns {module:LBMath.CatmullRomCalculator}
+ * Solves a 2x2 matrix.
+ * @param {Number[]} lhs    The 2x2 matrix to solve. The equation being solved is:
+ * <pre><code>
+ *      lhs[0] * result[0] + lhs[1] * result[1] = rhs[0]
+ *      lhs[2] * result[0] + lhs[3] * result[1] = rhs[1]
+ * </code></pre>
+ * @param {Number[]} rhs    The 2 element right hand side.
+ * @param {Number[]} [store] If defined the array to receive the results.
+ * @returns {Number[]}  The array containing the two solutions, an empty array if
+ * lhs is singular.
  */
-LBMath.CatmullRomCalculator = function() {
+LBMath.solve2x2Mat = function(lhs, rhs, store) {
+    store = store || [];
+    store.length = 0;
     
-};
-
-LBMath.CatmullRomCalculator.prototype = {
-    /**
-     * Sets up the calculator for a given t. The following must be true:
-     * t0 &lt; t1 &lt; t2 &lt; t3 &lt; t4
-     * @param {Number} t    The t of interest, it should be &ge; t0 and &le; t3.
-     * @param {Number} t0   The t at the first point.
-     * @param {Number} t1   The t at the second point.
-     * @param {Number} t2   The t at the third point.
-     * @param {Number} t3   The t at the fourth point.
-     * @returns {module:LBMath.CatmullRomCalculator}    this.
-     */
-    setTs: function(t, t0, t1, t2, t3) {
-        this.p0A1 = (t1 - t) / (t1 - t0);
-        this.p1A1 = (t - t0) / (t1 - t0);
-        this.p1A2 = (t2 - t) / (t2 - t1);
-        this.p2A2 = (t - t1) / (t2 - t1);
-        this.p2A3 = (t3 - t) / (t3 - t2);
-        this.p3A3 = (t - t2) / (t3 - t2);
-        this.a1B1 = (t2 - t) / (t2 - t0);
-        this.a2B1 = (t - t0) / (t2 - t0);
-        this.a2B2 = (t3 - t) / (t3 - t1);
-        this.a3B2 = (t - t1) / (t3 - t1);
-        this.b1C = (t2 - t) / (t2 - t1);
-        this.b2C = (t - t1) / (t2 - t1);
-        return this;
-    },
-    
-    /**
-     * Evalkuates the curve for a given set of values at the t specified in the last
-     * call to {@link module:LBMath.CatmullRomCalculator
-     * @param {type} p0
-     * @param {type} p1
-     * @param {type} p2
-     * @param {type} p3
-     * @returns {Math_L18.CatmullRomCalculator.prototype.calc.b1|Math_L18.CatmullRomCalculator.prototype.calc.b2|Number}
-     */
-    calc: function(p0, p1, p2, p3) {
-        var a1 = this.p0A1 * p0 + this.p1A1 * p1;
-        var a2 = this.p1A2 * p1 + this.p2A2 * p2;
-        var a3 = this.p2A3 * p2 + this.p3A3 * p3;
-        var b1 = this.a1B1 * a1 + this.a2B1 * a2;
-        var b2 = this.a2B2 * a2 + this.a3B2 * a3;
-        return this.b1C * b1 + this.b2C * b2;
-    },
-    
-    constructor: LBMath.CatmullRomCalculator
+    var den = lhs[0] * lhs[3] - lhs[1] * lhs[2];
+    if (!LBMath.isLikeZero(den)) {
+        store[0] = (lhs[3] * rhs[0] - lhs[1] * rhs[1]) / den;
+        store[1] = (lhs[0] * rhs[1] - lhs[2] * rhs[0]) / den;
+    }
+    return store;
 };
 
 return LBMath;
