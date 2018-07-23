@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>The Big T</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />
+        <style>
+            body {
+                margin: 0px;
+                border: 0px;
+                padding: 0px;
+            }
+            #map {
+                height: 100%;
+                width: 100%;
+                position: absolute;
+            }
+            
+            #splash {
+                left: 25%;
+                top: 25%;
+                height: 50%;
+                width: 50%;
+                text-align: center;
+                background-color: rgba(250, 250, 250, 0.75);
+            }
+            
+            .ui {
+                position: absolute;
+                left:0;
+                right:0;
+                z-index: 10000;
+            }
+            
+            .menuBar {
+                position: absolute;
+                right: 0;
+            }
+            
+            .right {
+                right: 0;
+            }
+
+            .dropbtn {
+                /*background-color: #4CAF50;*/
+                background-color: transparent;
+                color: slategray;
+                padding: 8px;
+                font-size: 14px;
+                border: none;
+                cursor: pointer;
+            }
+
+            /* The container <div> - needed to position the dropdown content */
+            .dropdown {
+                position: relative;
+                display: inline-block;
+            }
+
+            /* Dropdown Content (Hidden by Default) */
+            .dropdown-content {
+                display: none;
+                position: absolute;
+                /*background-color: #f9f9f9;*/
+                background-color: rgba(245, 245, 245, 0.75);
+                min-width: 260px;
+                box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                z-index: 1;
+                font-size: 14px;
+                font-family: "Verdana", sans-serif;
+
+                max-height: 500px;
+                overflow-y: auto;
+            }
+
+            /* Links inside the dropdown */
+            .dropdown-content p {
+                font-family: "Verdana", sans-serif;
+                color: black;
+                margin: 0px 0px;
+                padding: 6px 16px;
+                text-decoration: none;
+                display: block;
+            }
+            
+            .dropdown-content .disabled {
+                color: gray;
+            }
+            
+            /* Added to an item to indicate it is selected. */
+            .dropdown-content p.checked {
+                font-weight: bolder;
+                background-color: #f1f1f1;
+            }
+
+            /* Change color of dropdown links on hover */
+            .dropdown-content p:hover {
+                /*background-color: #c1c1c1*/
+                background-color: rgba(193, 193, 193, 0.7);
+            }
+
+            
+            /* The container */
+            .checkboxcontainer {
+                display: block;
+                position: relative;
+                padding-left: 25px;
+                /*margin-bottom: 12px;*/
+                margin: 12px 16px;
+                cursor: pointer;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
+
+            /* Hide the browser's default checkbox */
+            .checkboxcontainer input {
+                position: absolute;
+                opacity: 0;
+                cursor: pointer;
+            }
+
+            /* Create a custom checkbox */
+            .checkmark {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 18px;
+                width: 18px;
+                background-color: #eee;
+            }
+
+            /* On mouse-over, add a grey background color */
+            .checkboxcontainer:hover input ~ .checkmark {
+                background-color: #ccc;
+            }
+
+            /* When the checkbox is checked, add a blue background */
+            .checkboxcontainer input:checked ~ .checkmark {
+                background-color: #2196F3;
+            }
+
+            /* Create the checkmark/indicator (hidden when not checked) */
+            .checkmark:after {
+                content: "";
+                position: absolute;
+                display: none;
+            }
+
+            /* Show the checkmark when checked */
+            .checkboxcontainer input:checked ~ .checkmark:after {
+                display: block;
+            }
+
+            /* Style the checkmark/indicator */
+            .checkboxcontainer .checkmark:after {
+                left: 5px;
+                top: 1px;
+                width: 5px;
+                height: 10px;
+                border: solid white;
+                border-width: 0 3px 3px 0;
+                -webkit-transform: rotate(45deg);
+                -ms-transform: rotate(45deg);
+                transform: rotate(45deg);
+            }
+            
+            /* Added to dropbtn to drop down */
+            .show {
+                display: block;
+            }
+            .hide {
+                display: none;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="ui">
+            <div class="menuBar">
+                <div id="subwayMenu" class="dropdown">
+                    <button id="subwayBtn" class="dropbtn"><i class="material-icons">subway</i></button>
+                    <div id="subwayDropDownList" class="dropdown-content right">
+                        <p id="subwayShowAllMenu">Show all Subway</p>
+                        <p id="subwayHideAllMenu">Hide all Subway</p>
+<!--                        <label class="checkboxcontainer">
+                            <input type="checkbox" id = "redLineMenu">Red Line
+                            <span class="checkmark"></span>
+                        </label>
+                        <label class="checkboxcontainer">
+                            <input type="checkbox" id = "orangeLineMenu">Orange Line
+                            <span class="checkmark"></span>
+                        </label>
+                        <label class="checkboxcontainer">
+                            <input type="checkbox" id = "greenLineMenu">Green Line
+                            <span class="checkmark"></span>
+                        </label>
+                        <label class="checkboxcontainer">
+                            <input type="checkbox" id = "blueLineMenu">Blue Line
+                            <span class="checkmark"></span>
+                        </label>
+-->
+                    </div>
+                </div>
+                <div id="busMenu" class="dropdown">
+                    <button id="busBtn" class="dropbtn"><i class="material-icons">directions_bus</i></button>
+                    <div id="busDropDownList" class="dropdown-content right">
+                        <p id="busShowAllMenu">Show all Bus</p>
+                        <p id="busHideAllMenu">Hide all Bus</p>
+                    </div>
+                </div>
+                <div id="commuterRailMenu" class="dropdown">
+                    <button id="commuterRailBtn" class="dropbtn"><i class="material-icons">train</i></button>
+                    <div id="commuterRailDropDownList" class="dropdown-content right">
+                        <p id="commuterRailShowAllMenu">Show all Commuter Rail</p>
+                        <p id="commuterRailHideAllMenu">Hide all Commuter Rail</p>
+                    </div>
+                </div>
+                <div id="ferryMenu" class="dropdown">
+                    <button id="ferryBtn" class="dropbtn"><i class="material-icons">directions_boat</i></button>
+                    <div id="ferryDropDownList" class="dropdown-content right">
+                        <p id="ferryShowAllMenu">Show all Ferry</p>
+                        <p id="ferryHideAllMenu">Hide all Ferry</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <div id="splash" class="ui">
+            <p>LeeboardTools presents...</p>
+            <h1>The Big T</h1>
+            <p>View the state of the <a href="https://mbta.com" target="_blank">MBTA</a> trains and buses as reported by the MBTA.</p>
+            <p>&nbsp;</p>
+            <p id="loading">Loading route information from the <a href="https://mbta.com" target="_blank">MBTA</a>.</p>
+            <p>&nbsp;</p>
+            <p>MBTA data provided by <a href="https://mbta.com/" target="_blank">MBTA MassDOT</a>.</p>
+            <p>Map data provided by <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a>, &copy; OSM Contributors.</p>
+            <p>Javascript libraries by <a href="https://mapzen.com/tangram" target="_blank">Tangram</a> and <a href="https://leafletjs.com" target="_blank">Leaflet</a>.
+        </div>
+        
+        <!-- leaflet -->
+        <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+        
+        <!-- Leaflet.polyline -->
+        <script src="https://unpkg.com/polyline-encoded@0.0.8/Polyline.encoded.js"></script>
+
+        <!-- Main tangram library -->
+        <script src="https://unpkg.com/tangram/dist/tangram.min.js"></script>
+        
+        <script src="js/main.js"></script>
+    </body>
+</html>
