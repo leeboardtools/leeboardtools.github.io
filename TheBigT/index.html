@@ -27,10 +27,10 @@ and open the template in the editor.
             }
             
             #splash {
-                left: 25%;
-                top: 25%;
-                height: 50%;
-                width: 50%;
+                left: 15%;
+                top: 15%;
+                height: 70%;
+                width: 70%;
                 text-align: center;
                 background-color: rgba(250, 250, 250, 0.75);
             }
@@ -194,23 +194,6 @@ and open the template in the editor.
                     <div id="subwayDropDownList" class="dropdown-content right">
                         <p id="subwayShowAllMenu">Show all Subway</p>
                         <p id="subwayHideAllMenu">Hide all Subway</p>
-<!--                        <label class="checkboxcontainer">
-                            <input type="checkbox" id = "redLineMenu">Red Line
-                            <span class="checkmark"></span>
-                        </label>
-                        <label class="checkboxcontainer">
-                            <input type="checkbox" id = "orangeLineMenu">Orange Line
-                            <span class="checkmark"></span>
-                        </label>
-                        <label class="checkboxcontainer">
-                            <input type="checkbox" id = "greenLineMenu">Green Line
-                            <span class="checkmark"></span>
-                        </label>
-                        <label class="checkboxcontainer">
-                            <input type="checkbox" id = "blueLineMenu">Blue Line
-                            <span class="checkmark"></span>
-                        </label>
--->
                     </div>
                 </div>
                 <div id="busMenu" class="dropdown">
@@ -234,21 +217,31 @@ and open the template in the editor.
                         <p id="ferryHideAllMenu">Hide all Ferry</p>
                     </div>
                 </div>
+                <div id="settingsMenu" class="dropdown">
+                    <button id="settingsBtn" class="dropbtn"><i class="material-icons">menu</i></button>
+                    <div id="settingsDropDownList" class="dropdown-content right">
+                        <p id="aboutMenu">Splash...</p>
+<!--                        <p id="ferryHideAllMenu">Hide all Ferry</p>
+-->
+                    </div>
+                </div>
             </div>
         </div>
 
         <div id="map"></div>
 
         <div id="splash" class="ui">
-            <p>LeeboardTools presents...</p>
+            <p><a href="http://www.leeboardtools.com" target="_blank">LeeboardTools</a> presents...</p>
             <h1>The Big T</h1>
-            <p>View the state of the <a href="https://mbta.com" target="_blank">MBTA</a> trains and buses as reported by the MBTA.</p>
+            <p>View the locations of the <a href="https://mbta.com" target="_blank">MBTA</a> trains and buses as reported by the MBTA.</p>
             <p>&nbsp;</p>
             <p id="loading">Loading route information from the <a href="https://mbta.com" target="_blank">MBTA</a>.</p>
+            <p id="load_status">Loading map...</p>
             <p>&nbsp;</p>
             <p>MBTA data provided by <a href="https://mbta.com/" target="_blank">MBTA MassDOT</a>.</p>
             <p>Map data provided by <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a>, &copy; OSM Contributors.</p>
             <p>Javascript libraries by <a href="https://mapzen.com/tangram" target="_blank">Tangram</a> and <a href="https://leafletjs.com" target="_blank">Leaflet</a>.
+            <p>Icons by <a href="https://material.io/tools/icons/" target="_blank">Material Design</a>.</p>
         </div>
         
         <!-- leaflet -->
