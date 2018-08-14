@@ -285,7 +285,7 @@ class StopLayerEntry extends LayerEntry {
             // We only want the first prediction for each route.
             var visitedRoutes = new Set();
             predictionEntries.forEach((predictionEntry) => {
-                var routeId = predictionEntry.routeId;
+                var routeId = predictionEntry.routeId + ' ' + predictionEntry.directionId;
                 if (visitedRoutes.has(routeId)) {
                     return;
                 }
@@ -1230,7 +1230,7 @@ var busVertices = [
 class BusMarker extends VehicleMarker {
     constructor(routeLayerEntry) {
         super(busVertices, {
-            fillColor: 'darkCyan',
+            fillColor: 'brown',
             fillOpacity: 1,
             weight: 0
         });
@@ -2144,7 +2144,7 @@ function routeLayerEntryPromise(routeIds) {
 
 
 
-function fetchRouteIds(types) {
+function fetchRouteIdsAndNames(types) {
     var path = 'https://api-v3.mbta.com/routes';
     if (isIterable(types)) {
         path += '?filter%5Btype%5D=';
@@ -2162,18 +2162,23 @@ function fetchRouteIds(types) {
     
     return fetchMBTA(path)
             .then((response) => response.json())
-            .then((myJson) => processRoutesResultForIds(myJson));
+            .then((myJson) => processRoutesResultForIdsAndNames(myJson));
 }
 
-function processRoutesResultForIds(json) {
-    var ids = [];
+function processRoutesResultForIdsAndNames(json) {
+    var idsAndNames = [];
     var data = json.data;
     var layerEntries = [];
     for (let i = 0; i < data.length; ++i) {
-        ids.push(data[i].id);
+        idsAndNames.push({
+            id: data[i].id,
+            shortName: data[i].attributes.short_name,
+            longName: data[i].attributes.long_name,
+            type: data[i].attributes.type
+        });
     }
 
-    return ids;
+    return idsAndNames;
 }
 
 
@@ -2250,7 +2255,7 @@ function processTripIdsToFetch() {
     setInterval(processTripIdsToFetch, 2000);
 
     tLayers.routeLayerEntryPromise = routeLayerEntryPromise;
-    tLayers.fetchRouteIds = fetchRouteIds;
+    tLayers.fetchRouteIdsAndNames = fetchRouteIdsAndNames;
     tLayers.getSettingsAsJSON = getSettingsAsJSON;
     tLayers.updateSettingsFromJSON = updateSettingsFromJSON;
     return tLayers;

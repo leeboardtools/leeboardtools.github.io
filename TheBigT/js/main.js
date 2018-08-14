@@ -64,7 +64,7 @@ class UIRouteCategory {
     constructor(idBase) {
         this._idBase = idBase;
         
-        this.routeIds = [];
+        this.routeIdsAndNames = [];
         this.activeRouteIds = new Set();
         this.routeElementEntries = [];
         
@@ -337,6 +337,15 @@ function updateRoutesMenuState(uiCategory) {
     });
 }
 
+function displayNameFromRouteIdAndName(routeIdAndName) {
+    if (routeIdAndName.type === tLayers.ROUTE_BUS) {
+        return routeIdAndName.shortName + "-" + routeIdAndName.longName;
+    }
+    else {
+        return routeIdAndName.longName;
+    }
+}
+
 function setupRoutesMenu(categoryIndex) {
     var uiCategory = uiRouteCategories[categoryIndex];
     var idBase = uiCategory.idBase;
@@ -346,7 +355,10 @@ function setupRoutesMenu(categoryIndex) {
     
     menuItem = document.getElementById(idBase + 'ShowAllMenu');
     menuItem.onclick = () => {
-        uiCategory.activeRouteIds = new Set(uiCategory.routeIds);
+        uiCategory.activeRouteIds = new Set();
+        uiCategory.routeIdsAndNames.forEach((routeIdAndName) => {
+            uiCategory.activeRouteIds.add(routeIdAndName.id);
+        });
         uiCategory.saveToStorage(storage);
         updateRoutesMenuState(uiCategory);
         onUpdate();
@@ -363,21 +375,23 @@ function setupRoutesMenu(categoryIndex) {
     };
     
     var dropDownList = document.getElementById(idBase + 'DropDownList');
-    uiCategory.routeIds.forEach((routeId) => {
-        var id = makeValidElementId(routeId);
+    uiCategory.routeIdsAndNames.forEach((routeIdAndName) => {
+        var id = makeValidElementId(routeIdAndName.id);
         var onClick = function(e) {
             if (e.target.checked) {
-                uiCategory.activeRouteIds.add(routeId);
+                uiCategory.activeRouteIds.add(routeIdAndName.id);
             }
             else {
-                uiCategory.activeRouteIds.delete(routeId);
+                uiCategory.activeRouteIds.delete(routeIdAndName.id);
             }
             uiCategory.saveToStorage(storage);
             onUpdate();
         };
         
-        var result = addCheckboxItem(dropDownList, id, routeId, false, onClick);
-        result.routeId = routeId;
+        var name = displayNameFromRouteIdAndName(routeIdAndName);
+
+        var result = addCheckboxItem(dropDownList, id, name, false, onClick);
+        result.routeId = routeIdAndName.id;
         uiCategory.routeElementEntries.push(result);
     });
     
@@ -385,16 +399,22 @@ function setupRoutesMenu(categoryIndex) {
 }
 
 
-function routeIdSort(a, b) {
-    var aNum = Number.parseInt(a);
-    if (!Number.isNaN(aNum)) {
-        var bNum = Number.parseInt(b);
-        if (!Number.isNaN(bNum)) {
-            return aNum - bNum;
+function routeIdAndNameSort(a, b) {
+    // This tries to sort by bus number, but we want to clump the CT and Silverline buses
+    // together, which have numbers in the 700 range, so use shortName instead.
+    if (a.shortName && b.shortName) {
+        var aNum = Number.parseInt(a.shortName, 10);
+        if (!Number.isNaN(aNum)) {
+            var bNum = Number.parseInt(b.shortName, 10);
+            if (!Number.isNaN(bNum)) {
+                return aNum - bNum;
+            }
         }
     }
     
-    return a.toString().localeCompare(b.toString());
+    var aName = displayNameFromRouteIdAndName(a);
+    var bName = displayNameFromRouteIdAndName(b);
+    return aName.localeCompare(bName);
 }
 
 
@@ -456,39 +476,35 @@ function toggleItem(item, menuId) {
     
 
     updateSplashStatusMsg("Fetching subway route ids...");
-    tLayers.fetchRouteIds([tLayers.ROUTE_LIGHT_RAIL])
-            .then((routeIds) => { 
-                uiRouteCategories[CAT_SUBWAY].routeIds = routeIds;
-                return tLayers.fetchRouteIds([tLayers.ROUTE_HEAVY_RAIL]);
+    tLayers.fetchRouteIdsAndNames([tLayers.ROUTE_LIGHT_RAIL])
+            .then((routeIdsAndNames) => { 
+                uiRouteCategories[CAT_SUBWAY].routeIdsAndNames = routeIdsAndNames;
+                return tLayers.fetchRouteIdsAndNames([tLayers.ROUTE_HEAVY_RAIL]);
             })
-            .then((routeIds) => { 
-                uiRouteCategories[CAT_SUBWAY].routeIds = uiRouteCategories[CAT_SUBWAY].routeIds.concat(routeIds); 
+            .then((routeIdsAndNames) => { 
+                uiRouteCategories[CAT_SUBWAY].routeIdsAndNames = uiRouteCategories[CAT_SUBWAY].routeIdsAndNames.concat(routeIdsAndNames); 
                 updateSplashStatusMsg("Fetching commuter rail route ids...");
-                return tLayers.fetchRouteIds([tLayers.ROUTE_COMMUTER_RAIL]);
+                return tLayers.fetchRouteIdsAndNames([tLayers.ROUTE_COMMUTER_RAIL]);
             })
-            .then((routeIds) => { 
-                uiRouteCategories[CAT_COMMUTER_RAIL].routeIds = routeIds; 
+            .then((routeIdsAndNames) => { 
+                uiRouteCategories[CAT_COMMUTER_RAIL].routeIdsAndNames = routeIdsAndNames; 
                 updateSplashStatusMsg("Fetching bus route ids...");
-                return tLayers.fetchRouteIds([tLayers.ROUTE_BUS]);
+                return tLayers.fetchRouteIdsAndNames([tLayers.ROUTE_BUS]);
             })
-            .then((routeIds) => { 
-                uiRouteCategories[CAT_BUS].routeIds = routeIds; 
+            .then((routeIdsAndNames) => { 
+                uiRouteCategories[CAT_BUS].routeIdsAndNames = routeIdsAndNames; 
                 updateSplashStatusMsg("Fetching ferry route ids...");
-                return tLayers.fetchRouteIds([tLayers.ROUTE_FERRY]);
+                return tLayers.fetchRouteIdsAndNames([tLayers.ROUTE_FERRY]);
             })
-            .then((routeIds) => { 
-                uiRouteCategories[CAT_FERRY].routeIds = routeIds;
+            .then((routeIdsAndNames) => { 
+                uiRouteCategories[CAT_FERRY].routeIdsAndNames = routeIdsAndNames;
         
                 uiRouteCategories.forEach((uiCategory) => 
-                    uiCategory.routeIds.sort(routeIdSort));
+                    uiCategory.routeIdsAndNames.sort(routeIdAndNameSort));
         
                 if (!uiRouteCategories[CAT_SUBWAY].isLoadedFromStorage) {
-                    uiRouteCategories[CAT_SUBWAY].activeRouteIds = new Set(uiRouteCategories[CAT_SUBWAY].routeIds);
+                    uiRouteCategories[CAT_SUBWAY].activeRouteIds = new Set(uiRouteCategories[CAT_SUBWAY].routeIdsAndNames);
                 }
-                
-                //uiRouteCategories[CAT_BUS].activeRouteIds = new Set(uiRouteCategories[CAT_BUS].routeIds);
-                //uiRouteCategories[CAT_COMMUTER_RAIL].activeRouteIds = new Set(uiRouteCategories[CAT_COMMUTER_RAIL].routeIds);
-                //uiRouteCategories[CAT_FERRY].activeRouteIds = new Set(uiRouteCategories[CAT_FERRY].routeIds);
                 
                 setupUI();
                 
