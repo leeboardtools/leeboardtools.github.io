@@ -25,16 +25,6 @@ var myApp =
 // TODO:
 // Option to select inbound/outbound/both. 
 //
-// Settings:
-//      - Display buildings.
-//      - Display routes.
-//      - Display stops.
-//      - Display stations.
-//      - Display vehicles.
-//      - Estimate vehicle positions.
-//      
-//      - Save/restore the state for these settings.
-//      
 // Need to consolidate stops that are almost on top of each other so we can see
 // predictions for both directions.
 //
@@ -42,7 +32,7 @@ var myApp =
 // Need to use route name for route menus.
 
 var map = L.map('map');
-
+var mainLayer;
 
 var tLayers = setupTLayers(map);
     
@@ -54,6 +44,11 @@ var routes = tLayers.routes;
 
 var storage = window.localStorage;
 var tLayersStorageKey = 'tLayers';
+var optionsStorageKey = 'options';
+
+var options = {
+    showBuildings: true
+};
 
 const CAT_SUBWAY = 0;
 const CAT_BUS = 1;
@@ -134,6 +129,29 @@ function saveTLayersToStorage(storage) {
     var jsonValue = tLayers.getSettingsAsJSON();
     var value = JSON.stringify(jsonValue);
     storage.setItem(tLayersStorageKey, value);
+}
+
+function assignIfValue(value, newValue) {
+    return (newValue !== undefined) ? newValue : value;
+}
+
+function loadOptionsFromStorage(storage) {
+    var value = storage.getItem(optionsStorageKey);
+    if (value) {
+        try {
+            var jsonValue = JSON.parse(value);
+            if (jsonValue) {
+                options.showBuildings = assignIfValue(options.showBuildings, jsonValue.showBuildings);
+            }
+        } catch (e) {
+            
+        }
+    }
+}
+
+function saveOptionsToStorage(storage) {
+    var value = JSON.stringify(options);
+    storage.setItem(optionsStorageKey, value);
 }
 
 
@@ -454,17 +472,45 @@ function toggleItem(item, menuId) {
     closeDropDowns();
 }
 
+function toggleShowBuildings() {
+    if (!mainLayer.scene || !mainLayer.scene.config) {
+        return;
+    }
+    
+    var element = document.getElementById('showBuildingsMenu');
+    options.showBuildings = !options.showBuildings;
+    element.checked = options.showBuildings;
+    mainLayer.scene.config.layers.buildings.enabled = options.showBuildings;
+    mainLayer.scene.updateConfig();
+    saveOptionsToStorage(storage);
+    closeDropDowns();
+}
+
 
 //
 // Real start...
 //
 
-    var layer = Tangram.leafletLayer({
+    mainLayer = Tangram.leafletLayer({
         scene: 'scene.yaml',
         attribution: '<a href="https://mapzen.com/tangram" target="_blank">Tangram</a> | &copy; OSM contributors | <a href="https://mapzen.com/" target="_blank">Mapzen</a> | <a href="https://mbta.com/" target="_blank">MBTA MassDOT</a>'
     });
-    layer.addTo(map);
+    mainLayer.addTo(map);
     map.setView([42.356402, -71.062471], 13);
+    
+    mainLayer.on('init', function() {
+        if (mainLayer.scene && mainLayer.scene.config) {
+            var config = mainLayer.scene.config;
+            if (config.layers.buildings) {
+                config.layers.buildings.enabled = options.showBuildings;
+                document.getElementById('showBuildingsMenu').checked = options.showBuildings;
+            }
+            
+            mainLayer.scene.updateConfig();
+        }
+    });
+    
+    loadOptionsFromStorage(storage);
 
     uiRouteCategories.forEach((category) => category.loadFromStorage(storage));
     loadTLayersFromStorage(storage);
@@ -522,6 +568,7 @@ function toggleItem(item, menuId) {
 
     return {
         toggleItem: toggleItem,
+        toggleShowBuildings: toggleShowBuildings,
         onSplash: onSplash
     };
 }());
